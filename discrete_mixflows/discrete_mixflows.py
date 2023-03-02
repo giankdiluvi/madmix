@@ -87,8 +87,9 @@ def flow(x,u,steps,lp,xi=np.pi/16,direction='fwd'):
         direction : string, one of 'fwd' (forward map) or 'bwd' (backward map)
         
      outputs:
-       x' : (M,d) array, updated states x'
-       u' : (M,d) array, updated values u'
+       x'  : (M,d) array, updated states x'
+       u'  : (M,d) array, updated values u'
+       ljs : (d,) array, log Jacobians for each sample point
     """
          
     M=x.shape[0]
@@ -122,6 +123,7 @@ def Tm(x,u,prbs,xi=np.pi/16,direction='fwd'):
     outputs:
         xp : (d,) array, updated states xm'
         up : (d,) array, updated values um'
+        lj : (d,) array, log Jacobians
     """
             
     if direction=='bwd': xi=-xi # solve modular eqn for inverse by subtracting xi mod 1
