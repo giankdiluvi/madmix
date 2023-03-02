@@ -93,7 +93,7 @@ def flow(x,u,steps,lp,xi=np.pi/16,direction='fwd'):
          
     M=x.shape[0]
     ljs=np.zeros(x.shape)
-    if steps==0: return x,u
+    if steps==0: return x,u,0
     for t in range(steps):
         for m in range(M):
             m_idx = m if direction=='fwd'else M-m-1 # if in reverse, update starting from the end
