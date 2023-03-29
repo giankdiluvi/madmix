@@ -26,14 +26,16 @@ def lqN(x,u,N,lq0,lp,xi=np.pi/16):
          logqN(x,u) : (d,) array, likelihood at each datum x_i
     """
     
-    if N==1: return lq0(x,u)
+    xc=np.copy(x) 
+    uc=np.copy(u) # to prevent overwriting
+    if N==1: return lq0(xc,uc)
     w=np.zeros((N,x.shape[1]))
-    w[0,:]=lq0(x,u)
-    LJ=np.zeros(x.shape[1])
+    w[0,:]=lq0(xc,uc)
+    LJ=np.zeros(xc.shape[1])
     for n in range(N-1):
-        x,u,tlj=flow(x,u,1,lp,xi,direction='bwd')
+        xc,uc,tlj=flow(cx,uc,1,lp,xi,direction='bwd')
         LJ=LJ+tlj
-        w[n+1,:]=lq0(x,u)+LJ
+        w[n+1,:]=lq0(xc,uc)+LJ
     # end for
     return LogSumExp(w)-np.log(N)
         
