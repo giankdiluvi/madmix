@@ -203,7 +203,7 @@ def LogSumExp(w):
         w : (N,d) array, exponents
         
     outputs:
-        w' : (N,d) array, log(sum(exp(w)))
+        w' : (d,) array, log(sum(exp(w)))
     """
     
     wmax = np.amax(w,axis=0)
