@@ -3,6 +3,25 @@ from discrete_mixflows import *
 
 
 def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,verbose=False):
+    """
+    run a Gibbs sampler targeting exp(lp)
+    
+    inputs:
+        x0         : (M,) array, initial states of x
+        steps      : int, number of steps to run the sampler from (after burn-in)
+        lp         : function, target log likelihood (vectorized)
+        burnin_pct : float, percentage of burn-in desired
+        verbose    : boolean, indicates whether to print messages
+        
+     outputs:
+         xs        : (M,steps) array, Gibbs samples
+         
+    note: the total number of steps the sampler is run for is 
+          (T=steps+burn_in), where (burn_in=T*burnin_pct)
+          the total burn-in steps is therefore 
+          (steps*burnin_pct/(1-burnin_pct))
+    """
+    
     if steps==0: return x0[:,np.newaxis]
     burnin_steps=int(steps*burnin_pct/(1-burnin_pct))
     
@@ -22,6 +41,17 @@ def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,verbose=False):
     return xs[:,1:]
 
 def gibbs_update(x,lp):
+    """
+    do a single pass of a Gibbs sampler targeting exp(lp) starting at x
+    
+    inputs:
+        x  : (M,) array, initial state of x
+        lp : function, target log likelihood (vectorized)
+        
+     outputs:
+         x'        : (M,) array, state after a Gibbs pass
+    """
+    
     M=x.shape[0]
     for m in range(M):
         prbs_m=np.squeeze(np.exp(lp(x[:,np.newaxis],axis=m)))
