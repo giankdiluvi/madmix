@@ -162,6 +162,8 @@ inference
 ########################################
 """
 
+def elbo_exact(lq,lp): return -np.sum(np.exp(lq)*(lq-lp))
+
 def elbo(size,N,lp,lq0,randqN,randq0,xi=np.pi/16):
     """
     estimate ELBO(qN||p)
