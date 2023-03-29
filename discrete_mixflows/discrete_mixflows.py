@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 import pandas as pd
+from aux import *
 
 """
 ########################################
@@ -33,7 +34,7 @@ def lqN(x,u,N,lq0,lp,xi=np.pi/16):
     w[0,:]=lq0(xc,uc)
     LJ=np.zeros(xc.shape[1])
     for n in range(N-1):
-        xc,uc,tlj=flow(cx,uc,1,lp,xi,direction='bwd')
+        xc,uc,tlj=flow(xc,uc,1,lp,xi,direction='bwd')
         LJ=LJ+tlj
         w[n+1,:]=lq0(xc,uc)+LJ
     # end for
