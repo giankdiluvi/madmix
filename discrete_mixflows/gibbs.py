@@ -40,6 +40,7 @@ def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,verbose=False):
     # end for
     return xs[:,1:]
 
+
 def gibbs_update(x,lp):
     """
     do a single pass of a Gibbs sampler targeting exp(lp) starting at x
