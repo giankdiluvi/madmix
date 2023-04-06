@@ -253,7 +253,7 @@ def trainRealNVP(temp,depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,se
         loss.backward(retain_graph=True)
         optimizer.step()
         
-        if verbose and t % 500 == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
+        if verbose and t%(max_iters//10) == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
     # end for
     return flow,losses
     
