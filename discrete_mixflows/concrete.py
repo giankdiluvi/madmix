@@ -6,6 +6,7 @@ via RealNVP
 Implementation in torch
 """
 
+import numpy as np
 import torch
 from torch import nn
 from torch import distributions
@@ -217,7 +218,7 @@ https://colab.research.google.com/github/senya-ashukha/real-nvp-pytorch/blob/mas
 and adapted slightly
 """
 
-def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
     
@@ -227,6 +228,7 @@ def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,seed=0,verbose=Tru
         layers    : int, width of the linear layers
         max_iters : int, max number of Adam iters
         lr        : float, Adam learning rate
+        mc_ss     : int, number of samples to draw from target for training
         seed      : int, for reproducinility
         verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
     """
@@ -234,11 +236,13 @@ def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,seed=0,verbose=Tru
     
     # create flow
     flow=createRealNVP(depth,lprbs,layers=32)
+    target = ExpRelaxedCategorical(torch.tensor([0.1]),torch.tensor(torch.exp(prbs)))
     
     # train flow
+    sample=target.sample((mc_ss,)).float()
     optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
     losses=np.zeros(max_iters)
-    sample=target.sample((1000,)).float()
+    
     for t in range(max_iters):
         loss = -flow.log_prob(sample).mean()
         losses[t]=loss
