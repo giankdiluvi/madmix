@@ -175,16 +175,16 @@ def createRealNVP(depth,lprbs,layers=32):
     dim=lprbs.shape[0]
     
     # create channel-wise masks of appropriate size
-    mymat=torch.zeros((2,dim))
-    mymat[0,:(dim//2)]=1
-    mymat[1,(dim-(dim//2)):]=1
-    masks=mymat.repeat(depth//2,1)
+    masks=torch.zeros((2,dim))
+    masks[0,:(dim//2)]=1
+    masks[1,(dim-(dim//2)):]=1
+    masks=masks.repeat(depth//2,1)
     
     # define reference distribution
     ref = ExpRelaxedCategorical(torch.tensor([0.1]),torch.tensor(np.ones(dim)/dim))
     
     # define scale and translation architectures
-    nets = lambda: nn.Sequential(
+    net_s = lambda: nn.Sequential(
         nn.Linear(dim, layers), 
         nn.LeakyReLU(), 
         nn.Linear(layers, layers), 
@@ -192,11 +192,11 @@ def createRealNVP(depth,lprbs,layers=32):
         nn.Linear(layers, dim), 
         nn.Tanh()
     )
-    nett = lambda: nn.Sequential(
+    net_t = lambda: nn.Sequential(
         nn.Linear(dim, layers), 
         nn.LeakyReLU(),
         nn.Linear(layers, layers), 
         nn.LeakyReLU(), 
         nn.Linear(layers, dim)
     )
-    return RealNVP(nets, nett, masks, ref)
+    return RealNVP(net_s, net_t, masks, ref)
