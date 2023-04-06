@@ -127,8 +127,8 @@ class RealNVP(nn.Module):
         
         self.prior = prior
         self.mask = nn.Parameter(mask, requires_grad=False)
-        self.t = torch.nn.ModuleList([nett() for _ in range(len(masks))])
-        self.s = torch.nn.ModuleList([nets() for _ in range(len(masks))])
+        self.t = torch.nn.ModuleList([nett() for _ in range(len(mask))])
+        self.s = torch.nn.ModuleList([nets() for _ in range(len(mask))])
         
     def forward(self, z):
         x = z
@@ -161,7 +161,7 @@ class RealNVP(nn.Module):
         
 #========================================
 
-def createRealNVP(depth,lprbs,layers=32):
+def createRealNVP(temp,depth,lprbs,layers=32):
     """
     Wrapper to init a RealNVP class for a problem 
     with dimension dim that consists of depth layers
@@ -169,6 +169,7 @@ def createRealNVP(depth,lprbs,layers=32):
     The reference distribution is a relaxed uniform in exp space
     
     Inputs:
+        temp   : float, temperature of Concrete relaxation
         depth  : int, number of couplings (transformations)
         lprbs  : (dim,) array, target log probabilities
         layers : int, width of the linear layers
@@ -185,7 +186,7 @@ def createRealNVP(depth,lprbs,layers=32):
     masks=masks.repeat(depth//2,1)
     
     # define reference distribution
-    ref = ExpRelaxedCategorical(torch.tensor([0.1]),torch.tensor(np.ones(dim)/dim))
+    ref = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(dim)/dim)
     
     # define scale and translation architectures
     net_s = lambda: nn.Sequential(
@@ -218,11 +219,12 @@ https://colab.research.google.com/github/senya-ashukha/real-nvp-pytorch/blob/mas
 and adapted slightly
 """
 
-def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,verbose=True):
+def trainRealNVP(temp,depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
     
     Input:
+        temp      : float, temperature of Concrete relaxation
         depth     : int, number of couplings (transformations)
         lprbs     : (dim,) array, target log probabilities
         layers    : int, width of the linear layers
@@ -235,8 +237,8 @@ def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,
     torch.manual_seed(seed)
     
     # create flow
-    flow=createRealNVP(depth,lprbs,layers=32)
-    target = ExpRelaxedCategorical(torch.tensor([0.1]),torch.tensor(torch.exp(prbs)))
+    flow=createRealNVP(temp,depth,lprbs,layers=32)
+    target = ExpRelaxedCategorical(torch.tensor([temp]),torch.tensor(np.exp(lprbs)))
     
     # train flow
     sample=target.sample((mc_ss,)).float()
@@ -251,7 +253,7 @@ def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,
         loss.backward(retain_graph=True)
         optimizer.step()
         
-        if verbose and t % 100 == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
+        if verbose and t % 500 == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
     # end for
     return flow,losses
     
