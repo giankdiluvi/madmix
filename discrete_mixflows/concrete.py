@@ -167,10 +167,13 @@ def createRealNVP(depth,lprbs,layers=32):
     
     The reference distribution is a relaxed uniform in exp space
     
-    Input:
+    Inputs:
         depth  : int, number of couplings (transformations)
         lprbs  : (dim,) array, target log probabilities
         layers : int, width of the linear layers
+        
+    Outputs:
+        flow   : Module, RealNVP
     """
     dim=lprbs.shape[0]
     
@@ -200,3 +203,51 @@ def createRealNVP(depth,lprbs,layers=32):
         nn.Linear(layers, dim)
     )
     return RealNVP(net_s, net_t, masks, ref)
+    
+    
+"""
+########################################
+########################################
+RealNVP training
+########################################
+########################################
+
+taken from
+https://colab.research.google.com/github/senya-ashukha/real-nvp-pytorch/blob/master/real-nvp-pytorch.ipynb#scrollTo=p5YX9_EW3_EU
+and adapted slightly
+"""
+
+def trainRealNVP(depth,lprbs,layers=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+    """
+    Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
+    
+    Input:
+        depth     : int, number of couplings (transformations)
+        lprbs     : (dim,) array, target log probabilities
+        layers    : int, width of the linear layers
+        max_iters : int, max number of Adam iters
+        lr        : float, Adam learning rate
+        seed      : int, for reproducinility
+        verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
+    """
+    torch.manual_seed(seed)
+    
+    # create flow
+    flow=createRealNVP(depth,lprbs,layers=32)
+    
+    # train flow
+    optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
+    losses=np.zeros(max_iters)
+    sample=target.sample((1000,)).float()
+    for t in range(max_iters):
+        loss = -flow.log_prob(sample).mean()
+        losses[t]=loss
+        
+        optimizer.zero_grad()
+        loss.backward(retain_graph=True)
+        optimizer.step()
+        
+        if verbose and t % 100 == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
+    # end for
+    return flow,losses
+    
