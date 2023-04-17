@@ -61,7 +61,7 @@ def idx_unflattenBinary(x,M):
 
     return (((x[:,np.newaxis] & (1 << np.arange(M)))) > 0).astype(int).T
 
-def idx_flattenBinary(x,M):
+def idx_flattenBinary(x):
     """
     Each dimension of x is either 0 or 1
     Flattens to integers in [0,2**M)
@@ -71,7 +71,7 @@ def idx_flattenBinary(x,M):
     Output:
         x_ : (d,) array, flatened array
     """
-    return np.sum(unflat.T*np.power(2,np.arange(0,M)),axis=1)
+    return np.sum(x.T*np.power(2,np.arange(0,x.shape[0])),axis=1)
 #========================================
 
 """
