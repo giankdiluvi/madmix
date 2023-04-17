@@ -19,6 +19,8 @@ auxiliary functions
 ########################################
 ########################################
 """
+
+# unflatten functions for bivariate analyses
 def idx_unflatten(x,K2):
     """
     Each x_i is an integer in [0,K1*K2)
@@ -42,6 +44,34 @@ def idx_flatten(x,K2):
         x_ : (d,) array, flatened array
     """
     return x[0,:]*K2+x[1,:]
+#========================================
+
+# unflatten functions for Ising model
+def idx_unflattenBinary(x,M):
+    """
+    Each x_i is an integer in [0,2**M)
+    Converts to numbers in {0,1}**M
+    Adapted from https://stackoverflow.com/questions/22227595/convert-integer-to-binary-array-with-suitable-padding
+
+    Input:
+        x  : (d,) array, flattened array
+    Output:
+        x_ : (M,d) array, unflattened array
+    """
+
+    return (((x[:,np.newaxis] & (1 << np.arange(M)))) > 0).astype(int).T
+
+def idx_flattenBinary(x,M):
+    """
+    Each dimension of x is either 0 or 1
+    Flattens to integers in [0,2**M)
+
+    Input:
+        x  : (M,d) array, unflattened array
+    Output:
+        x_ : (d,) array, flatened array
+    """
+    return np.sum(unflat.T*np.power(2,np.arange(0,M)),axis=1)
 #========================================
 
 """
