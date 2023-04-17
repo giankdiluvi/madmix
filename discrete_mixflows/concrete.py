@@ -12,6 +12,37 @@ from torch import nn
 from torch import distributions
 from torch.nn.parameter import Parameter
 
+"""
+########################################
+########################################
+auxiliary functions
+########################################
+########################################
+"""
+def idx_unflatten(x,K2):
+    """
+    Each x_i is an integer in [0,K1*K2)
+    Converts to tuples in [0,K1]x[0,K2]
+
+    Input:
+        x  : (d,) array, flattened array
+    Output:
+        x_ : (2,d) array, unflattened array
+    """
+    return np.vstack((x//K2,x%K2))
+
+def idx_flatten(x,K2):
+    """
+    Each x_ij is a tuple in [0,K1]x[0,K2]
+    Flattens to integers in [0,K1*K2)
+
+    Input:
+        x  : (2,d) array, unflattened array
+    Output:
+        x_ : (d,) array, flatened array
+    """
+    return x[0,:]*K2+x[1,:]
+#========================================
 
 """
 ########################################
@@ -106,7 +137,7 @@ class ExpRelaxedCategorical(Distribution):
         score = logits - value.mul(self.temperature)
         score = (score - score.logsumexp(dim=-1, keepdim=True)).sum(-1)
         return score + log_scale
-
+#========================================
 
 """
 ########################################
@@ -124,12 +155,12 @@ class RealNVP(nn.Module):
     """
     def __init__(self, nets, nett, mask, prior):
         super(RealNVP, self).__init__()
-        
+
         self.prior = prior
         self.mask = nn.Parameter(mask, requires_grad=False)
         self.t = torch.nn.ModuleList([nett() for _ in range(len(mask))])
         self.s = torch.nn.ModuleList([nets() for _ in range(len(mask))])
-        
+
     def forward(self, z):
         x = z
         for i in range(len(self.t)):
@@ -148,65 +179,65 @@ class RealNVP(nn.Module):
             z = (1 - self.mask[i]) * (z - t) * torch.exp(-s) + z_
             log_det_J -= s.sum(dim=-1)
         return z, log_det_J
-    
+
     def log_prob(self,x):
         z, logp = self.backward(x)
         return self.prior.log_prob(z) + logp
-        
-    def sample(self, batchSize): 
+
+    def sample(self, batchSize):
         z = self.prior.sample((batchSize, 1)).float()
         logp = self.prior.log_prob(z)
         x = self.forward(z)
         return x
-        
+
 #========================================
 
 def createRealNVP(temp,depth,lprbs,layers=32):
     """
-    Wrapper to init a RealNVP class for a problem 
+    Wrapper to init a RealNVP class for a problem
     with dimension dim that consists of depth layers
-    
+
     The reference distribution is a relaxed uniform in exp space
-    
+
     Inputs:
         temp   : float, temperature of Concrete relaxation
         depth  : int, number of couplings (transformations)
         lprbs  : (dim,) array, target log probabilities
         layers : int, width of the linear layers
-        
+
     Outputs:
         flow   : Module, RealNVP
     """
     dim=lprbs.shape[0]
-    
+
     # create channel-wise masks of appropriate size
     masks=torch.zeros((2,dim))
     masks[0,:(dim//2)]=1
     masks[1,(dim-(dim//2)):]=1
     masks=masks.repeat(depth//2,1)
-    
+
     # define reference distribution
     ref = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(dim)/dim)
-    
+
     # define scale and translation architectures
     net_s = lambda: nn.Sequential(
-        nn.Linear(dim, layers), 
-        nn.LeakyReLU(), 
-        nn.Linear(layers, layers), 
-        nn.LeakyReLU(), 
-        nn.Linear(layers, dim), 
+        nn.Linear(dim, layers),
+        nn.LeakyReLU(),
+        nn.Linear(layers, layers),
+        nn.LeakyReLU(),
+        nn.Linear(layers, dim),
         nn.Tanh()
     )
     net_t = lambda: nn.Sequential(
-        nn.Linear(dim, layers), 
+        nn.Linear(dim, layers),
         nn.LeakyReLU(),
-        nn.Linear(layers, layers), 
-        nn.LeakyReLU(), 
+        nn.Linear(layers, layers),
+        nn.LeakyReLU(),
         nn.Linear(layers, dim)
     )
     return RealNVP(net_s, net_t, masks, ref)
-    
-    
+
+
 """
 ########################################
 ########################################
@@ -222,7 +253,7 @@ and adapted slightly
 def trainRealNVP(temp,depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
-    
+
     Input:
         temp      : float, temperature of Concrete relaxation
         depth     : int, number of couplings (transformations)
@@ -235,25 +266,24 @@ def trainRealNVP(temp,depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,se
         verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
     """
     torch.manual_seed(seed)
-    
+
     # create flow
     flow=createRealNVP(temp,depth,lprbs,layers=32)
     target = ExpRelaxedCategorical(torch.tensor([temp]),torch.tensor(np.exp(lprbs)))
-    
+
     # train flow
     sample=target.sample((mc_ss,)).float()
     optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
     losses=np.zeros(max_iters)
-    
+
     for t in range(max_iters):
         loss = -flow.log_prob(sample).mean()
         losses[t]=loss
-        
+
         optimizer.zero_grad()
         loss.backward(retain_graph=True)
         optimizer.step()
-        
+
         if verbose and t%(max_iters//10) == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
     # end for
     return flow,losses
-    
