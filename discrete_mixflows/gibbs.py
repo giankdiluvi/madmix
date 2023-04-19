@@ -76,6 +76,31 @@ Gaussian mixture model Gibbs sampler
 ########################################
 """
 def gibbs_gmm(y,w,tau,tau0,steps,burnin_pct=0.25,verbose=False,seed=0):
+    """
+    Run a Gibbs sampler for the means mu and labels x of
+    a Gaussian mixture model with obsevations
+    yn~sum_k wk Gaussian(muk,tauk), n=1,...,N
+    and known weights w and precisions tau
+
+    Inputs:
+        y          : (N,) array, observations
+        w          : (K,) array, weights
+        tau        : (K,) array, precisions
+        tau0       : float, prior precision for the mean
+        steps      : int, number of steps to run the sampler from (after burn-in)
+        burnin_pct : float, percentage of burn-in desired
+        verbose    : boolean, indicates whether to print messages
+        seed       : int, random seed
+
+     Outputs:
+         xs        : (N,steps) array, labels samples
+         mus       : (K,steps) array, means samples
+
+    Note: the total number of steps the sampler is run for is
+          (T=steps+burn_in), where (burn_in=T*burnin_pct)
+          the total burn-in steps is therefore
+          (steps*burnin_pct/(1-burnin_pct))
+    """
     np.random.seed(0+seed)
     N=y.shape[0]
     K=w.shape[0]
@@ -115,6 +140,22 @@ def gibbs_gmm(y,w,tau,tau0,steps,burnin_pct=0.25,verbose=False,seed=0):
 
 
 def gibbs_gmm_update(x,mu,y,w,tau,tau0):
+    """
+    Do a single pass of a Gibbs sampler for a Gaussian mixture model
+    starting at x and mu
+
+    Inputs:
+        x          : (N,) array, current labels
+        mu         : (K,) array, current means
+        y          : (N,) array, observations
+        w          : (K,) array, weights
+        tau        : (K,) array, precisions
+        tau0       : float, prior precision for the mean
+
+     Outputs:
+         x        : (N,) array, updated labels
+         mu       : (K,) array, updated means
+    """
     N=x.shape[0]
     K=w.shape[0]
 
@@ -138,5 +179,18 @@ def gibbs_gmm_update(x,mu,y,w,tau,tau0):
     return x_,mu_
 
 
-def gauss_lp_allmeans(y,mu,tau): #(N,),(K,),(K,)->(N,K)
+def gauss_lp_allmeans(y,mu,tau):
+    """
+    Evaluate a Gaussian log pdf
+    This function evaluates phi(yn;muk,tauk)
+    for all combinations of n=1,...,N and k=1,...,K
+
+    Inputs:
+        y          : (N,) array, observations
+        mu         : (K,) array, means
+        tau        : (K,) array, precisions
+
+     Outputs:
+         x        : (N,K) array, log pdfs
+    """
     return -0.5*((y[:,np.newaxis]-mu[np.newaxis,:])**2)*tau[np.newaxis,:]-0.5*np.log(2*np.pi/tau[np.newaxis,:])
