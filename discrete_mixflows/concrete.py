@@ -350,16 +350,18 @@ class GMMRef(Distribution):
     def __init__(self, N,K,tau0=1.,temp=1.):
         self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(K)/K)
         self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(K), torch.eye(K)/np.sqrt(tau0))
+        self.K = K
+        self.N = N
 
     def log_prob(self, value):
-        mvn_lp = self.gauss.log_prob(value[...,:K])
+        mvn_lp = self.gauss.log_prob(value[...,:self.K])
         relcat_lp = torch.zeros(value.shape[0])
-        for n in range(N): relcat_lp += self.relcat.log_prob(value[...,K+n*K+torch.arange(0,K)])
+        for n in range(self.N): relcat_lp += self.relcat.log_prob(value[...,self.K+n*self.K+torch.arange(0,self.K)])
         return relcat_lp+mvn_lp
 
     def sample(self,sample_shape=torch.Size()):
         relcat_sample=self.relcat.sample(sample_shape)
-        for n in range(N-1): relcat_sample = torch.hstack((relcat_sample,self.relcat.sample(sample_shape)))
+        for n in range(self.N-1): relcat_sample = torch.hstack((relcat_sample,self.relcat.sample(sample_shape)))
         mvn_sample=self.gauss.sample(sample_shape)
         return torch.hstack((mvn_sample,relcat_sample))
 #========================================
@@ -376,7 +378,7 @@ def gmm_concrete_sample(pred_x,pred_mu,temp):
         temp    : float, temperature of Concrete relaxation
     """
     # estimate probabilities of each xn
-    x_prbs=np.sum(pred_x==np.arange(0,K,dtype=int)[:,np.newaxis,np.newaxis],axis=-1)
+    x_prbs=np.sum(pred_x==np.arange(0,pred_mu.shape[0],dtype=int)[:,np.newaxis,np.newaxis],axis=-1)
     x_prbs=(x_prbs/np.sum(x_prbs,axis=0)[np.newaxis,:]).T
 
     # generate sample for training using Gibbs output and Gumbel soft-max
