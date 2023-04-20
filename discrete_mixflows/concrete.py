@@ -183,13 +183,14 @@ class RealNVP(nn.Module):
     https://colab.research.google.com/github/senya-ashukha/real-nvp-pytorch/blob/master/real-nvp-pytorch.ipynb#scrollTo=p5YX9_EW3_EU
     and adapted slightly
     """
-    def __init__(self, nets, nett, mask, prior):
+    def __init__(self, nets, nett, mask, prior, gmm=False):
         super(RealNVP, self).__init__()
 
         self.prior = prior
         self.mask = nn.Parameter(mask, requires_grad=False)
         self.t = torch.nn.ModuleList([nett() for _ in range(len(mask))])
         self.s = torch.nn.ModuleList([nets() for _ in range(len(mask))])
+        self.gmm = gmm
 
     def forward(self, z):
         x = z
@@ -215,7 +216,8 @@ class RealNVP(nn.Module):
         return self.prior.log_prob(z) + logp
 
     def sample(self, batchSize):
-        z = self.prior.sample((batchSize, 1)).float()
+        size = (batchSize,) if self.gmm else (batchSize, 1)
+        z = self.prior.sample(size).float()
         #logp = self.prior.log_prob(z)
         x = self.forward(z)
         return x
@@ -303,6 +305,163 @@ def trainRealNVP(temp,depth,lprbs,layers=32,max_iters=1000,lr=1e-4,mc_ss=1000,se
 
     # train flow
     sample=target.sample((mc_ss,)).float()
+    optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
+    losses=np.zeros(max_iters)
+
+    for t in range(max_iters):
+        loss = -flow.log_prob(sample).mean()
+        losses[t]=loss
+
+        optimizer.zero_grad()
+        loss.backward(retain_graph=True)
+        optimizer.step()
+
+        if verbose and t%(max_iters//10) == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
+    # end for
+    return flow,losses
+
+
+
+"""
+########################################
+########################################
+Gaussian mixture model training
+########################################
+########################################
+
+taken from
+https://colab.research.google.com/github/senya-ashukha/real-nvp-pytorch/blob/master/real-nvp-pytorch.ipynb#scrollTo=p5YX9_EW3_EU
+and adapted slightly
+"""
+
+
+class GMMRef(Distribution):
+    """
+    Reference distribution for the means and labels of a GMM
+    Uninformative Gaussian for the means,
+    relaxed ExpConcrete for the labels
+
+    Inputs:
+        N    : int, number of observations from the GMM
+        K    : int, mixture size
+        tau0 : float, means prior precision
+        temp : float, temperature of Concrete relaxation
+    """
+    def __init__(self, N,K,tau0=1.,temp=1.):
+        self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(K)/K)
+        self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(K), torch.eye(K)/np.sqrt(tau0))
+
+    def log_prob(self, value):
+        mvn_lp = self.gauss.log_prob(value[...,:K])
+        relcat_lp = torch.zeros(value.shape[0])
+        for n in range(N): relcat_lp += self.relcat.log_prob(value[...,K+n*K+torch.arange(0,K)])
+        return relcat_lp+mvn_lp
+
+    def sample(self,sample_shape=torch.Size()):
+        relcat_sample=self.relcat.sample(sample_shape)
+        for n in range(N-1): relcat_sample = torch.hstack((relcat_sample,self.relcat.sample(sample_shape)))
+        mvn_sample=self.gauss.sample(sample_shape)
+        return torch.hstack((mvn_sample,relcat_sample))
+#========================================
+
+
+def gmm_concrete_sample(pred_x,pred_mu,temp):
+    """
+    Generate sample for learning GMM with RealNVP
+    using a Concrete relaxation for the labels
+
+    Inputs:
+        pred_x  : (N,steps) array, predicted label values (from `gibbs.gibbs_gmm`)
+        pred_mu : (K,steps) array, predicted mean values (from `gibbs.gibbs_gmm`)
+        temp    : float, temperature of Concrete relaxation
+    """
+    # estimate probabilities of each xn
+    x_prbs=np.sum(pred_x==np.arange(0,K,dtype=int)[:,np.newaxis,np.newaxis],axis=-1)
+    x_prbs=(x_prbs/np.sum(x_prbs,axis=0)[np.newaxis,:]).T
+
+    # generate sample for training using Gibbs output and Gumbel soft-max
+    G=np.random.gumbel(size=(pred_x.shape[-1],x_prbs.shape[0],x_prbs.shape[1]))
+    conc_sample=(x_prbs[np.newaxis,...]+G)/temp-np.log(np.sum(np.exp((x_prbs[np.newaxis,...]+G)/temp),axis=-1))[...,np.newaxis]
+    conc_sample=conc_sample.reshape(pred_x.shape[-1],x_prbs.shape[0]*x_prbs.shape[1])
+    conc_sample=torch.tensor(np.hstack((conc_sample,pred_mu.T))).float()
+
+    return conc_sample
+
+
+def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
+    """
+    Wrapper to init a RealNVP class for a GMM problem
+
+    The reference distribution is a relaxed uniform in exp space
+    for the labels and a multivariate normal with precision tau0
+    for the means
+
+    Inputs:
+        temp   : float, temperature of Concrete relaxation
+        depth  : int, number of couplings (transformations)
+        N      : int, number of observations from the GMM
+        K      : int, mixture size
+        tau0   : float, prior precision for means
+        width : int, width of the linear layers
+
+    Outputs:
+        flow   : Module, RealNVP
+    """
+    dim=K*(N+1)
+
+    # create channel-wise masks of appropriate size
+    masks=torch.zeros((2,dim))
+    masks[0,:(dim//2)]=1
+    masks[1,(dim-(dim//2)):]=1
+    masks=masks.repeat(depth//2,1)
+
+    # define reference distribution
+    ref = GMMRef(N,K,tau0,temp)
+
+    # define scale and translation architectures
+    net_s = lambda: nn.Sequential(
+        nn.Linear(dim, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, dim),
+        nn.Tanh()
+    )
+    net_t = lambda: nn.Sequential(
+        nn.Linear(dim, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, dim)
+    )
+    return RealNVP(net_s, net_t, masks, ref, gmm=True)
+
+
+
+def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,verbose=True):
+    """
+    Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
+
+    Input:
+        temp      : float, temperature of Concrete relaxation
+        depth     : int, number of couplings (transformations)
+        N         : int, number of observations from the GMM
+        K         : int, mixture size
+        tau0      : float, prior precision for means
+        sample    : (B,K*(N+1)) array, samples from target for training; B is the Monte Carlo sample size
+        width     : int, width of the linear layers
+        max_iters : int, max number of Adam iters
+        lr        : float, Adam learning rate
+        mc_ss     : int, number of samples to draw from target for training
+        seed      : int, for reproducinility
+        verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
+    """
+    torch.manual_seed(seed)
+
+    # create flow
+    flow=createGMMRealNVP(temp,depth,N,K,tau0,width)
+
+    # train flow
     optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
     losses=np.zeros(max_iters)
 
