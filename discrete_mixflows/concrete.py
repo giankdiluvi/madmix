@@ -216,7 +216,7 @@ class RealNVP(nn.Module):
 
     def sample(self, batchSize):
         z = self.prior.sample((batchSize, 1)).float()
-        logp = self.prior.log_prob(z)
+        #logp = self.prior.log_prob(z)
         x = self.forward(z)
         return x
 
