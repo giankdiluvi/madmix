@@ -376,6 +376,9 @@ def gmm_concrete_sample(pred_x,pred_mu,temp):
         pred_x  : (N,steps) array, predicted label values (from `gibbs.gibbs_gmm`)
         pred_mu : (K,steps) array, predicted mean values (from `gibbs.gibbs_gmm`)
         temp    : float, temperature of Concrete relaxation
+
+    Outputs:
+        conc_sample : (steps,K*(N+1)) array, samples to be used in training
     """
     # estimate probabilities of each xn
     x_prbs=np.sum(pred_x==np.arange(0,pred_mu.shape[0],dtype=int)[:,np.newaxis,np.newaxis],axis=-1)
