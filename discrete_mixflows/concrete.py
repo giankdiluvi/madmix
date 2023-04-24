@@ -385,7 +385,7 @@ def gmm_concrete_sample(pred_x,pred_mu,temp):
     G=np.random.gumbel(size=(pred_x.shape[-1],x_prbs.shape[0],x_prbs.shape[1]))
     conc_sample=(x_prbs[np.newaxis,...]+G)/temp-np.log(np.sum(np.exp((x_prbs[np.newaxis,...]+G)/temp),axis=-1))[...,np.newaxis]
     conc_sample=conc_sample.reshape(pred_x.shape[-1],x_prbs.shape[0]*x_prbs.shape[1])
-    conc_sample=torch.tensor(np.hstack((conc_sample,pred_mu.T))).float()
+    conc_sample=torch.tensor(np.hstack((pred_mu.T,conc_sample))).float()
 
     return conc_sample
 
