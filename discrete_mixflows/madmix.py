@@ -30,7 +30,7 @@ def lqN(xd,ud,xc,rho,uc,N,lq0,L,epsilon,lp,grad_lp,xi=np.pi/16):
         L         : int, number of leapfrog steps for Hamiltonian dynamics
         epsilon   : float, step size for Hamiltonian dynamics
         lp        : function, posterior and conditional pmf
-        grad_lp   : function, target score function for Hamiltonian dynamics (vectorized)
+        grad_lp   : function, target score function generator for Hamiltonian dynamics (vectorized)
         xi        : scalar, pseudo time shift
 
      outputs:
@@ -69,7 +69,7 @@ def randqN(size,N,randq0,L,epsilon,lp,grad_lp,xi=np.pi/16):
         L         : int, number of leapfrog steps for Hamiltonian dynamics
         epsilon   : float, step size for Hamiltonian dynamics
         lp        : function, posterior and conditional pmf
-        grad_lp   : function, target score function for Hamiltonian dynamics (vectorized)
+        grad_lp   : function, target score function generator for Hamiltonian dynamics (vectorized)
         xi        : scalar, pseudo time shift
 
      outputs:
@@ -119,7 +119,7 @@ def flow(steps,xd,ud,xc,rho,uc,L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi,directio
         L         : int, number of leapfrog steps for Hamiltonian dynamics
         epsilon   : float, step size for Hamiltonian dynamics
         lp        : function, posterior and conditional pmf
-        grad_lp   : function, target score function for Hamiltonian dynamics (vectorized)
+        grad_lp   : function, target score function generator for Hamiltonian dynamics (vectorized)
         lm,Fm,Qm,grad_lm : functions, momentum log density, cdf, quantile fn, and score fn (respectively)
         xi        : scalar, pseudo time shift
         direction : string, one of 'fwd' (forward map) or 'bwd' (backward map)
@@ -140,8 +140,9 @@ def flow(steps,xd,ud,xc,rho,uc,L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi,directio
     # iterate flow
     for n in range(steps):
         # take a step and update log jacobian
-        if direction=='fwd': xd_,ud_,xc_,rho_,uc_,tmplJ=forward(xd_,ud_,xc_,rho_,uc_,L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi)
-        if direction=='bwd': xd_,ud_,xc_,rho_,uc_,tmplJ=backward(xd_,ud_,xc_,rho_,uc_,L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi)
+        curr_grad_lp=grad_lp(xd_) # define new grad lp
+        if direction=='fwd': xd_,ud_,xc_,rho_,uc_,tmplJ=forward(xd_,ud_,xc_,rho_,uc_,L,epsilon,lp,curr_grad_lp,lm,Fm,Qm,grad_lm,xi)
+        if direction=='bwd': xd_,ud_,xc_,rho_,uc_,tmplJ=backward(xd_,ud_,xc_,rho_,uc_,L,epsilon,lp,curr_grad_lp,lm,Fm,Qm,grad_lm,xi)
         lJ=lJ+tmplJ
     # end for
     return xd_,ud_,xc_,rho_,uc_,lJ
