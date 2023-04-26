@@ -85,14 +85,16 @@ def randqN(size,N,randq0,L,epsilon,lp,grad_lp,xi=np.pi/16):
     xd,ud,xc,rho,uc=randq0(size)                             # initialize samples
     for n in range(N):
         # update points where the current n does not exceed their corresponding K
-        txd,tud,txc,trho,tuc,_=flow(1,xd[:,K>=n+1],ud[:,K>=n+1],xc[:,K>=n+1],rho[:,K>=n+1],uc[:,K>=n+1],L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi,'fwd')
+        idx=K>=n+1
+        #if np.sum(idx)==0: continue # if all values have sampled K < n then don't take more steps
+        txd,tud,txc,trho,tuc,_=flow(1,xd[:,idx],ud[:,idx],xc[:,idx],rho[:,idx],uc[idx],L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi,'fwd')
 
         # save updates
-        xd[:,K>=n+1]=txd
-        ud[:,K>=n+1]=tud
-        xc[:,K>=n+1]=txc
-        rho[:,K>=n+1]=trho
-        uc[K>=n+1]=tuc
+        xd[:,idx]=txd
+        ud[:,idx]=tud
+        xc[:,idx]=txc
+        rho[:,idx]=trho
+        uc[idx]=tuc
     # end for
     return xd,ud,xc,rho,uc
 
@@ -177,9 +179,9 @@ def forward(xd,ud,xc,rho,uc,L,epsilon,lp,grad_lp,lm,Fm,Qm,grad_lm,xi):
     xc_,rho_,uc_,lJc=cmfs.forward(xc,rho,uc,L,epsilon,grad_lp,lm,Fm,Qm,grad_lm,xi)
 
     # take step in discrete space
-    lJd=np.zeros(xd.shape)
-    M=xd.shape[0]
     xd_,ud_=np.copy(xd),np.copy(ud)
+    M=xd_.shape[0]
+    lJd=np.zeros(xd_.shape)
     for m in range(M):
         tmp_prbs=np.atleast_1d(np.exp(lp(xd_,xc_,axis=m)))
         tmp_prbs=tmp_prbs/np.sum(tmp_prbs,axis=1)[:,np.newaxis]
