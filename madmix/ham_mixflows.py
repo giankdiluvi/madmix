@@ -48,7 +48,7 @@ def lqN(x,rho,u,N,lq0,L,epsilon,grad_lp,xi=np.pi/16,burnin=0):
     for n in range(N-1):
         x_,rho_,u_,tlJ=flow(1,x_,rho_,u_,L,epsilon,grad_lp,lm,Fm,Qm,grad_lm,xi,'bwd') # one step bwd
         lJ=lJ+tlJ # update log jacobian
-        w[n+1,:]=lq0(x_,rho_,u_)+tlJ # update weight
+        w[n+1,:]=lq0(x_,rho_,u_)+lJ # update weight
     # end for
     #return LogSumExp(w)-np.log(N)
     return LogSumExp(w[burnin:,:])-np.log(N-burnin)
