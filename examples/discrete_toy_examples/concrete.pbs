@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-#PBS -l walltime=96:00:00,select=1:ncpus=20:mem=8gb
+#PBS -l walltime=96:00:00,select=1:ncpus=32:mem=64gb
 #PBS -J 2-31:1
 #PBS -A st-tdjc-1
 #PBS -N onedim-concrete
@@ -11,17 +11,17 @@
 #PBS -e /scratch/st-tdjc-1/madmix/toy_examples/onedim/errors/concrete_^array_index^.txt
 ################################################################################
 
-module load python/3.7.3
-module load py-argparse/1.4.0-py3.7.3
-module load py-pip/19.0.3-py3.7.3
+module load python/3.8.10
+module load py-argparse/1.4.0-py3.8.10
+module load py-pip/21.1.2-py3.8.10
 
 cd $PBS_O_WORKDIR
 
 export PYTHONPATH=.
 
 
-params=`sed "${PBS_ARRAY_INDEX}q;d" settings.config`  # read the settings file in current iteration
-param_array=( $params )                               # save current row of settins in param_array
+params=`sed "${PBS_ARRAY_INDEX}q;d" onedim_settings.txt`  # read the settings file in current iteration
+param_array=( $params )                            # save current row of settins in param_array
 
 # run code
-python ../tests.py -d 1 --target 'cauchy' -B 1000 --reps ${param_array[0]} --tol 0.0 --stop 'default' --kl --lbvi_smc -N 50 --smc 'smc' --maxiter 30 --smc_eps 0.05 --smc_sd 1 --smc_T 100 --smc_w_maxiter 10 --smc_b_maxiter 10 --smc_cacheing --outpath '/scratch/st-tdjc-1/lbvi/cauchy/' --verbose
+python ../run_concrete.py --target 'onedim' --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --maxiters 10000 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/toy_examples/onedim/'
