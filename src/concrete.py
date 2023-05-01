@@ -443,7 +443,7 @@ def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
 
 
 
-def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,mc_ss=1000,seed=0,verbose=True):
+def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
 
@@ -457,7 +457,6 @@ def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,m
         width     : int, width of the linear layers
         max_iters : int, max number of Adam iters
         lr        : float, Adam learning rate
-        mc_ss     : int, number of samples to draw from target for training
         seed      : int, for reproducinility
         verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
     """
