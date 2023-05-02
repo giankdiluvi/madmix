@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "../../run_concrete.py", line 106, in <module>
+    tmp_flow,tmp_loss=trainRealNVP(
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/twodim/../../../src/concrete.py", line 312, in trainRealNVP
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/twodim/../../../src/concrete.py", line 216, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/twodim/../../../src/concrete.py", line 163, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 20)) to be within the support (IndependentConstraint(Real(), 1)) of the distribution ExpRelaxedCategorical(), but found invalid values:
+tensor([[ 3.5662e+23, -1.6665e+25, -3.1782e+24,  ..., -4.1705e+24,
+         -1.0177e+25, -1.0604e+25],
+        [ 3.0139e+23, -1.4084e+25, -2.6860e+24,  ..., -3.5245e+24,
+         -8.6004e+24, -8.9613e+24],
+        [ 3.7183e+23, -1.7376e+25, -3.3138e+24,  ..., -4.3483e+24,
+         -1.0610e+25, -1.1056e+25],
+        ...,
+        [ 3.9258e+23, -1.8346e+25, -3.4987e+24,  ..., -4.5909e+24,
+         -1.1202e+25, -1.1673e+25],
+        [ 2.9620e+23, -1.3842e+25, -2.6398e+24,  ..., -3.4639e+24,
+         -8.4523e+24, -8.8070e+24],
+        [ 4.0655e+23, -1.8999e+25, -3.6232e+24,  ..., -4.7544e+24,
+         -1.1601e+25, -1.2088e+25]], grad_fn=<AddBackward0>)

@@ -1,0 +1,6 @@
+Training a RealNVP normalizing flow with a Concrete relaxation
+Target distribution: mixture
+Temperature: 1.0
+Depth: 128
+Width: 50
+iter 0: loss = 84790101896331264.000
