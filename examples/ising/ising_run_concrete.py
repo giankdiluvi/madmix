@@ -92,15 +92,32 @@ else: # import gibbs samples and use them to estimate probabilities
 
 ########################
 ########################
-#    Concrete          #
+#    Settings          #
 ########################
 ########################
 print('Training a RealNVP normalizing flow with a Concrete relaxation for an Ising model')
-print('Number of Ising particles M: '+str(M))
-print('Ising inverse temperature: '+str(beta))
-print('Temperature: '+str(temp))
-print('Depth: '+str(depth))
-print('Width: '+str(width))
+print()
+print('Ising model settings:')
+print('Number of particles M: '+str(M))
+print('Inverse temperature: '+str(beta))
+print()
+print('Flow settings:')
+print('Relaxation temperature: '+str(temp))
+print('Flow depth: '+str(depth))
+print('Flow width: '+str(width))
+print()
+print('Optimizer settings:')
+print('Max number of iters: '+str(max_iters))
+print('Learning rate: '+str(lr))
+print()
+
+
+########################
+########################
+#    Concrete          #
+########################
+########################
+print('Starting optimization')
 t0 = time.perf_counter()
 tmp_flow,tmp_loss=trainRealNVP(
     temp=temp,depth=depth,lprbs=np.log(prbs),width=width,max_iters=max_iters,lr=lr,seed=2023
@@ -108,9 +125,16 @@ tmp_flow,tmp_loss=trainRealNVP(
 cpu_time=time.perf_counter()-t0
 print('Done!')
 print('Total training time: '+str(cpu_time)+' seconds')
+print()
+
+
+print('Cacheing results')
+pkl_save(tmp_flow, outpath+'cache/0'+str(idx)+'_ising_flows')
+pkl_save(tmp_loss, outpath+'cache/0'+str(idx)+'_ising_losses')
+print()
+
+
 print('Saving results')
-
-
 # load files
 flows     = pkl_load(outpath+'ising_flows')
 losses    = pkl_load(outpath+'ising_losses')

@@ -2,7 +2,7 @@
 #!/bin/bash
 
 #PBS -l walltime=12:00:00,select=1:ncpus=20:mem=16gb
-#PBS -J 1-144:1
+#PBS -J 1-5:1
 #PBS -A st-tdjc-1
 #PBS -N ising-concrete
 #PBS -m abe
