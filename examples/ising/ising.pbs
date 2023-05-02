@@ -25,4 +25,4 @@ params=`sed "${PBS_ARRAY_INDEX}q;d" ising_settings.txt`  # read the settings fil
 param_array=( $params )                            # save current row of settins in param_array
 
 # run code
-python ising_run_concrete.py -M 20 --beta 2 --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/ising/'
+python ising_run_concrete.py -M 50 --beta 2 --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/ising/'
