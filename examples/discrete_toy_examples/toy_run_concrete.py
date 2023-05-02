@@ -94,14 +94,30 @@ if target=='mixture':
 
 ########################
 ########################
-#    Concrete          #
+#    Settings          #
 ########################
 ########################
 print('Training a RealNVP normalizing flow with a Concrete relaxation')
-print('Target distribution: '+target    )
-print('Temperature: '+str(temp))
-print('Depth: '+str(depth))
-print('Width: '+str(width))
+print()
+print('Target distribution: '+target)
+print()
+print('Flow settings:')
+print('Relaxation temperature: '+str(temp))
+print('Flow depth: '+str(depth))
+print('Flow width: '+str(width))
+print()
+print('Optimizer settings:')
+print('Max number of iters: '+str(max_iters))
+print('Learning rate: '+str(lr))
+print()
+
+
+########################
+########################
+#    Concrete          #
+########################
+########################
+print('Starting optimization')
 t0 = time.perf_counter()
 tmp_flow,tmp_loss=trainRealNVP(
     temp=temp,depth=depth,lprbs=np.log(prbs),width=width,max_iters=max_iters,lr=lr,seed=2023
