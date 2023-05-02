@@ -15,6 +15,9 @@ iter 8000: loss = 50394038272000.000
 iter 9000: loss = 67990884188160.000
 iter 10000: loss = 111281637949440.000
 Done!
-Total training time: 5136.983507432975 seconds
+Total training time: 5232.778374040965 seconds
+
+Cacheing results
+
 Saving results
 Done!

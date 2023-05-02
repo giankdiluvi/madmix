@@ -1,5 +1,5 @@
 Traceback (most recent call last):
-  File "../../run_concrete.py", line 106, in <module>
+  File "../toy_run_concrete.py", line 106, in <module>
     tmp_flow,tmp_loss=trainRealNVP(
   File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/mixture/../../../src/concrete.py", line 312, in trainRealNVP
     loss = -flow.log_prob(sample).mean()
