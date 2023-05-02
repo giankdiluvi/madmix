@@ -4,6 +4,8 @@ import sys, time, pickle
 
 sys.path.insert(1, 'src/')
 sys.path.insert(1, '../src/')
+sys.path.insert(1, '../../src/')
+sys.path.insert(1, '../../../src/')
 from concrete import *
 from aux import *
 
@@ -121,6 +123,7 @@ losses[idx,:]  = tmp_loss
 cpu_times[idx] = cpu_time
 
 # save updated files
-pkl_save(flows, outpath+filename+'_TESTflows')
-pkl_save(losses, outpath+filename+'_TESTlosses')
-pkl_save(cpu_times, outpath+filename+'_TESTcpu_times')
+pkl_save(flows, outpath+filename+'_flows')
+pkl_save(losses, outpath+filename+'_losses')
+pkl_save(cpu_times, outpath+filename+'_cpu_times')
+print('Done!')

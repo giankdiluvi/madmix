@@ -1,0 +1,20 @@
+Training a RealNVP normalizing flow with a Concrete relaxation
+Target distribution: onedim
+Temperature: 0.1
+Depth: 64
+Width: 50
+iter 0: loss = 8887007.000
+iter 1000: loss = 1176463.375
+iter 2000: loss = 387638.500
+iter 3000: loss = 394031.531
+iter 4000: loss = 338689.156
+iter 5000: loss = 152079.250
+iter 6000: loss = 166901.641
+iter 7000: loss = 90718.203
+iter 8000: loss = 55148.320
+iter 9000: loss = 56910.414
+iter 10000: loss = 82766.945
+Done!
+Total training time: 1952.516899386188 seconds
+Saving results
+Done!
