@@ -63,13 +63,34 @@ tau0=0.1
 
 ########################
 ########################
-#    Concrete          #
+#    Settings          #
 ########################
 ########################
 print('Training a RealNVP normalizing flow with a Concrete relaxation for a GMM')
-print('Temperature: '+str(temp))
-print('Depth: '+str(depth))
-print('Width: '+str(width))
+print()
+print('Mixture settings:')
+print('Mixture size K: '+str(K))
+print('Number of observations N: '+str(N))
+print('Prior precision tau0: '+str(tau0))
+print()
+print('Flow settings:')
+print('Relaxation temperature: '+str(temp))
+print('Flow depth: '+str(depth))
+print('Flow width: '+str(width))
+print()
+print('Optimizer settings:')
+print('Max number of iters: '+str(max_iters))
+print('Learning rate: '+str(lr))
+print()
+
+
+
+########################
+########################
+#    Concrete          #
+########################
+########################
+print('Starting optimization')
 t0 = time.perf_counter()
 conc_sample=gmm_concrete_sample(pred_x,pred_mu,temp)
 tmp_flow,tmp_loss=trainGMMRealNVP(
@@ -79,9 +100,15 @@ tmp_flow,tmp_loss=trainGMMRealNVP(
 cpu_time=time.perf_counter()-t0
 print('Done!')
 print('Total training time: '+str(cpu_time)+' seconds')
+print()
+
+print('Cacheing results')
+pkl_save(tmp_flow, outpath+'cache/0'+str(idx)+'_gmm_flows')
+pkl_save(tmp_loss, outpath+'cache/0'+str(idx)+'_gmm_losses')
+print()
+
+
 print('Saving results')
-
-
 # load files
 flows     = pkl_load(outpath+'gmm_flows')
 losses    = pkl_load(outpath+'gmm_losses')
