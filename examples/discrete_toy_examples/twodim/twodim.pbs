@@ -25,4 +25,4 @@ params=`sed "${PBS_ARRAY_INDEX}q;d" twodim_settings.txt`  # read the settings fi
 param_array=( $params )                            # save current row of settins in param_array
 
 # run code
-python ../../run_concrete.py --target 'twodim' --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/toy_examples/twodim/'
+python ../toy_run_concrete.py --target 'twodim' --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/toy_examples/twodim/'
