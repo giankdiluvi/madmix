@@ -10,7 +10,7 @@ discrete-only, continuous-only, and mixed models.
 for discrete-only models
 - `ham_mixflows.py` is a `python` implementation of 
 Mixflows via deterministic uncorrected Hamiltonian Monte Carlo,
-as introduced in Xu et al. (2022)
+as introduced in [Xu et al. (2022)](https://arxiv.org/abs/2205.07475)
 - `madmix.py` combines the last two instantiations to produce
 flow-based variational approximations for models with 
 discrete and continuous variables
