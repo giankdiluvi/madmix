@@ -84,6 +84,7 @@ def randqN(size,N,randq0,L,epsilon,lp,grad_lp,xi=np.pi/16):
     lm,Fm,Qm,grad_lm=cmfs.lap_lm,cmfs.lap_Fm,cmfs.lap_Qm,cmfs.lap_gradlm # laplacian momentum
     xd,ud,xc,rho,uc=randq0(size)                             # initialize samples
     for n in range(N):
+        print('Sampling '+str(n+1)+'/'+str(N),end='\r')
         # update points where the current n does not exceed their corresponding K
         idx=K>=n+1
         #if np.sum(idx)==0: continue # if all values have sampled K < n then don't take more steps
