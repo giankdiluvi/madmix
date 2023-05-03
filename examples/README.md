@@ -19,23 +19,25 @@ and a bivariate mixture
 
 ## Defining a target log probability
 
-Each Jupyter notebook defines a log pmf function
+Each Jupyter notebook defines a vectorized log pmf function
 for the discrete target distribution.
 This function simultaneously returns either the 
 joint pmf or the full conditionals (given an axis input).
 If you wish to implement your own target log pmf
-for an M-dimensional problem,
+for an M-dimensional problem where the m-th variable
+takes values in {1,...,Km},
 the general format for it is this:
 
 ```
 def lp(x,axis=None):
-    # compute the M-variate log joint and conditional target pmfs
+    # Compute the M-variate log joint and conditional target pmfs
+    # The input contains d different M-dimensional points and this fn should be vectorized
     #
-    # inputs:
+    # Inputs:
     #    x    : (M,d) array with state values
     #    axis : int, full conditional to calculate; returns joint if None
-    # outputs:
-    #   lprb : if axis is None, (d,) array with log joint; else, (d,K1) array with d conditionals 
+    # Outputs:
+    #   lprb : if axis is None, (d,) array with log joint; else, (d,Km) array with d conditionals 
     
     if axis==None: 
         # define the log joint and assign it to lprb
