@@ -1,13 +1,18 @@
-# Discrete Ergodic Flows
+# Mad Mix
 
-This is a `python` package for using MixFlows with discrete variables.
+This is a `python` package that implements Mad Mix,
+a flow-based variational methodology to learn discrete distributions.
+
 
 
 ## Directory roadmap
-- `discrete_mixflows` contains source code for different
-VI methodologies, and specifically contains the source code
-for running MixFlows for discrete variables
+Each subdirectory contains README files. Generally:
+- `src` contains the source code for MadMix,
+including instantiations for discrete-only,
+continuous-only (as in Xu et al. (2022)),
+and mixed discrete and continuous
 - `examples/` has examples where MixFlows are used
-to learn discrete distributions
+to learn different distributions, 
+some purely discrete and some including continuous variables as well
 - `ipynb/`  contains jupyter notebooks with
- preliminary implementations of the code.
+ preliminary implementations of the code. (TODO delete.)
