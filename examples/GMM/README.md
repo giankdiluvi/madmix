@@ -27,6 +27,7 @@ by setting `RUN=True` in the appropriate cell.
 experiments
 - `gmm.pbs` is a file to run the `gmm_run_concrete.py` 144 times
 with the architecture settings specificied in `gmm_settings.txt`
+- `gmm_settings.txt` contains the settings for the Real NVP architecture search
 - The `*.pkl` files with data to seed the Concrete relaxation,
 as well as the results from the flows, losses, and cpu times
 would be here but are not included in the repo due to GitHub commit size constraints:
