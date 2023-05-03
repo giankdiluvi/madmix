@@ -7,7 +7,7 @@ a flow-based variational methodology to learn discrete distributions.
 
 ## Directory roadmap
 Each subdirectory contains README files. Generally:
-- `src` contains the source code for MadMix,
+- `src/` contains the source code for MadMix,
 including instantiations for discrete-only,
 continuous-only (as in Xu et al. (2022)),
 and mixed discrete and continuous
