@@ -1,0 +1,34 @@
+Training a RealNVP normalizing flow with a Concrete relaxation for an Ising model
+
+Ising model settings:
+Number of particles M: 5
+Inverse temperature: 1.0
+
+Flow settings:
+Relaxation temperature: 0.1
+Flow depth: 64
+Flow width: 50
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 963359808.000
+iter 1000: loss = 149946192.000
+iter 2000: loss = 98837048.000
+iter 3000: loss = 110830680.000
+iter 4000: loss = 67567080.000
+iter 5000: loss = 82816504.000
+iter 6000: loss = 45648280.000
+iter 7000: loss = 33269036.000
+iter 8000: loss = 39139384.000
+iter 9000: loss = 44571252.000
+iter 10000: loss = 29042408.000
+Done!
+Total training time: 2392.067507278174 seconds
+
+Cacheing results
+
+Saving results
+Done!

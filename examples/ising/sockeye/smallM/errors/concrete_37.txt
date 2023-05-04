@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "ising_run_concrete.py", line 139, in <module>
+    flows     = pkl_load(outpath+'ising_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/ising/../../src/aux.py", line 41, in pkl_load
+    obj = pickle.load(f)
+EOFError: Ran out of input
