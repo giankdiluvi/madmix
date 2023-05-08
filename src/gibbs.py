@@ -8,7 +8,7 @@ discrete variable inference only
 ########################################
 ########################################
 """
-def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,verbose=False):
+def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,switch=False,verbose=False):
     """
     Run a Gibbs sampler targeting exp(lp)
 
@@ -17,6 +17,7 @@ def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,verbose=False):
         steps      : int, number of steps to run the sampler from (after burn-in)
         lp         : function, target log likelihood (vectorized)
         burnin_pct : float, percentage of burn-in desired
+        switch     : boolean, indicates whether to propose the switch x -> 1-x for ising model
         verbose    : boolean, indicates whether to print messages
 
      Outputs:
@@ -42,21 +43,28 @@ def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,verbose=False):
     xs[:,0]=x0
     for t in range(steps):
         if verbose: print('Sampling: '+str(t+1)+'/'+str(steps),end='\r')
-        xs[:,t+1]=gibbs_update(xs[:,t],lp)
+        x_updated=gibbs_update(xs[:,t],lp)
+        if switch:
+            prbs_updated=np.squeeze(np.exp(lp(x_updated)))    # prbs if we don't switch
+            prbs_switched=np.squeeze(np.exp(lp(1-x_updated))) # prbs if we do switch
+            switch_idx=(prbs_updated<prbs_switched)           # where switching is more likely (vectorized)
+            x_updated[switch_idx]=1-x_updated[switch_idx]     # update x accordingly
+        # end if
+        xs[:,t+1]=x_updated
     # end for
     return xs[:,1:]
 
 
-def gibbs_update(x,lp):
+def gibbs_update(x,lp,switch=False):
     """
     Do a single pass of a Gibbs sampler targeting exp(lp) starting at x
 
     Inputs:
-        x  : (M,) array, initial state of x
-        lp : function, target log likelihood (vectorized)
+        x   : (M,) array, initial state of x
+        lp  : function, target log likelihood (vectorized)
 
      Outputs:
-         x'        : (M,) array, state after a Gibbs pass
+         x' : (M,) array, state after a Gibbs pass
     """
 
     M=x.shape[0]
