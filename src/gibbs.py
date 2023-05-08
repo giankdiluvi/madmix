@@ -45,8 +45,8 @@ def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,switch=False,verbose=False):
         if verbose: print('Sampling: '+str(t+1)+'/'+str(steps),end='\r')
         x_updated=gibbs_update(xs[:,t],lp)
         if switch:
-            prbs_updated=np.squeeze(np.exp(lp(x_updated)))    # prbs if we don't switch
-            prbs_switched=np.squeeze(np.exp(lp(1-x_updated))) # prbs if we do switch
+            prbs_updated=np.squeeze(np.exp(lp(x_updated[np.newaxis,:])))    # prbs if we don't switch
+            prbs_switched=np.squeeze(np.exp(lp(1-x_updated[np.newaxis,:]))) # prbs if we do switch
             switch_idx=(prbs_updated<prbs_switched)           # where switching is more likely (vectorized)
             x_updated[switch_idx]=1-x_updated[switch_idx]     # update x accordingly
         # end if
