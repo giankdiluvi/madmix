@@ -47,7 +47,7 @@ def gibbs_sampler(x0,steps,lp,burnin_pct=0.25,switch=False,verbose=False):
         if switch:
             prbs_updated=np.squeeze(np.exp(lp(x_updated[np.newaxis,:])))    # prbs if we don't switch
             prbs_switched=np.squeeze(np.exp(lp(1-x_updated[np.newaxis,:]))) # prbs if we do switch
-            switch_idx=(prbs_updated<prbs_switched)           # where switching is more likely (vectorized)
+            switch_idx=(prbs_switched/prbs_updated)>np.random.rand(x0.shape[0])  # where switching is more likely (vectorized)
             x_updated[switch_idx]=1-x_updated[switch_idx]     # update x accordingly
         # end if
         xs[:,t+1]=x_updated
