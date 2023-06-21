@@ -25,3 +25,6 @@ Manifest.toml
 
 # no pickle files
 *.pkl
+
+# no data files
+/ipynb/dat/*
