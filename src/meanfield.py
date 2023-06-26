@@ -83,20 +83,20 @@ def meanfieldIsing(lprbs,max_iters):
     lq=np.random.rand(M,2) # random
     lq=np.log(lq/np.sum(lq))
 
-
-    tmpx=idx_unflattenBinary(np.arange(2**(M-1)),M-1)
+    tmpx_long=idx_unflattenBinary(np.arange(2**M),M)
+    tmpx_short=idx_unflattenBinary(np.arange(2**(M-1)),M-1)
     for t in range(max_iters):
         for m in reversed(range(M)):
-            tmplp0=lprbs[tmpx[m,:]==0] # select from log p those with xm=0
-            tmplp1=lprbs[tmpx[m,:]==1] # select from log p those with xm=1
+            tmplp0=lprbs[tmpx_long[m,:]==0] # select from log p those with xm=0
+            tmplp1=lprbs[tmpx_long[m,:]==1] # select from log p those with xm=1
             tmplq=np.delete(lq,m,axis=0) # rm prbs from xm
 
             # now calculate all 2*(M-1) possible products qm'*qm'' for expectation
             ljoint0=np.zeros(2**(M-1))
             ljoint1=np.zeros(2**(M-1))
             for i in range(2**(M-1)):
-                ljoint0[i]=np.sum(tmplq[np.arange(M-1),tmpx[:,i]])
-                ljoint1[i]=np.sum(tmplq[np.arange(M-1),tmpx[:,i]])
+                ljoint0[i]=np.sum(tmplq[np.arange(M-1),tmpx_short[:,i]])
+                ljoint1[i]=np.sum(tmplq[np.arange(M-1),tmpx_short[:,i]])
             # end for
 
             # obtain joint and normalize
