@@ -87,8 +87,8 @@ def meanfieldIsing(lprbs,max_iters):
     tmpx=idx_unflattenBinary(np.arange(2**(M-1)),M-1)
     for t in range(max_iters):
         for m in reversed(range(M)):
-            tmplp0=lprbs[x[m,:]==0] # select from log p those with xm=0
-            tmplp1=lprbs[x[m,:]==1] # select from log p those with xm=1
+            tmplp0=lprbs[tmpx[m,:]==0] # select from log p those with xm=0
+            tmplp1=lprbs[tmpx[m,:]==1] # select from log p those with xm=1
             tmplq=np.delete(lq,m,axis=0) # rm prbs from xm
 
             # now calculate all 2*(M-1) possible products qm'*qm'' for expectation
