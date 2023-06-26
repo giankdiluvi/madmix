@@ -76,6 +76,7 @@ def meanfieldIsing(lprbs,max_iters):
         lprbs     : (2**M,) array, target log probabilities
         max_iters : int, max number of gradient ascent iterations
     """
+    M=int(np.log2(lprbs.shape))
     #lq=-np.log(2)*np.ones((M,2)) # exactly 1/2 each
     #lq=0.5*np.ones((M,2))
     #lq[0,0]+=0.0001       # 1/2 each + small noise
