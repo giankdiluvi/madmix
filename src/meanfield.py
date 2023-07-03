@@ -67,43 +67,31 @@ def meanfield2D(lq1,lq2,lp,max_iters):
 ########################
 ########################
 """
-def meanfieldIsing(lprbs,max_iters):
+def meanfieldIsing(M,beta,max_iters):
     """
     Discrete mean field VI for the Ising model
     Warning: only use for M<10
 
     Inputs:
-        lprbs     : (2**M,) array, target log probabilities
+        M         : int, number of particles
+        beta      : float, inverse temperature (beta>0)
         max_iters : int, max number of gradient ascent iterations
+
+    Outputs:
+        lq        : (M,2) array, variational log pmf of each q_m
     """
-    M=int(np.log2(lprbs.shape))
-    #lq=-np.log(2)*np.ones((M,2)) # exactly 1/2 each
-    #lq=0.5*np.ones((M,2))
-    #lq[0,0]+=0.0001       # 1/2 each + small noise
-    lq=np.random.rand(M,2) # random
-    lq=np.log(lq/np.sum(lq))
 
-    tmpx_long=idx_unflattenBinary(np.arange(2**M),M)
-    tmpx_short=idx_unflattenBinary(np.arange(2**(M-1)),M-1)
+    lq=-np.log(2)*np.ones((M,2)) # initialize at exactly 1/2 each
     for t in range(max_iters):
-        for m in reversed(range(M)):
-            tmplp0=lprbs[tmpx_long[m,:]==0] # select from log p those with xm=0
-            tmplp1=lprbs[tmpx_long[m,:]==1] # select from log p those with xm=1
-            tmplq=np.delete(lq,m,axis=0) # rm prbs from xm
+        for m in range(M):
+            # edge cases first
+            if m==0: tmplq1=beta*(2*lq[m+1,0]-1) # P(Xm=+1)+c
+            if m==M-1: tmplq1=beta*(2*lq[m-1,0]-1) # P(Xm=+1)+c
 
-            # now calculate all 2*(M-1) possible products qm'*qm'' for expectation
-            ljoint0=np.zeros(2**(M-1))
-            ljoint1=np.zeros(2**(M-1))
-            for i in range(2**(M-1)):
-                ljoint0[i]=np.sum(tmplq[np.arange(M-1),tmpx_short[:,i]])
-                ljoint1[i]=np.sum(tmplq[np.arange(M-1),tmpx_short[:,i]])
-            # end for
-
-            # obtain joint and normalize
-            tmplq=np.array([np.sum(ljoint0*tmplp0),np.sum(ljoint1*tmplp1)])
+            # non-edge cases now
+            if m>0 and m<M-1: tmplq1=2*beta*(lq[m-1,0]+lq[m+1,0]-1) # P(Xm=+1)+c
+            tmplq=np.array([-1.*tmplq1,tmplq1]) # (P(Xm=-1),P(Xm=+1))+c
             lZ=LogSumExp(tmplq[:,np.newaxis])
-
-            # update joint
             lq[m,:]=tmplq-lZ
         # end for
     # end for
