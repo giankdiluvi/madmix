@@ -104,3 +104,102 @@ def flattenlq(lq):
     lq_flat=np.zeros(2**M)
     for i in range(2**M): lq_flat[i]=np.sum(lq[np.arange(M),tmpx[:,i]])
     return lq_flat
+
+
+""""
+########################
+########################
+#    mean field gmm    #
+########################
+########################
+"""
+from scipy.special import digamma as psi
+def meanfieldGMM(y,mu0,sigma0,iterations):
+    """
+    Mean field VI for a Gaussian Mixture Model.
+    The algorithm learns q(x,w,mus,Sigmas)
+    where x are cluster labels, w are cluster weights,
+    mus are cluster means, and Sigmas are cluster covariances.
+    The variational approximation decomposes as:
+    q(x_n)~Cat(r_{n,1:K}),
+    q(w)~Dir(alphas),
+    q(Sigma_k)~InvWishart(invW_k,nu_k),
+    q(mu_k|Sigma_k)~N(m_k,Sigma_k/beta_k)).
+
+    Inputs:
+        y          : (N,D) array, observations (N is no. of obs, d is dimension of each obs)
+        mu0        : (K,D) array, initial means (K is number of clusters)
+        sigma0     : (K,D,D) array, initial covariances
+        iterations : int, number of iterations to run optimization for
+
+    Outputs:
+        alphas     : (K,) array, weights Dirichlet approximation variational parameters
+        lrs        : (N,K) array, estimated cluster probabilities per observation
+        ms         : (K,D) array, means mean variational parameters
+        betas      : (K,) array, means covariance variational parameters
+        invWs      : (K,D,D) array, covariance invWishart variational parameters
+        nus        : (K,) array, covariance invWishart degrees of freedom
+    """
+    N,D=y.shape
+    K=mu0.shape[0]
+
+    # init params
+    alpha0=1.    # weights w Dirichlet prior param, small = let the data speak
+    beta0=0.1*N  # means precision. Default: prior sample size = 10% of observed sample size
+    nu0=N-D-2
+
+    # init arrays
+    lrs=np.zeros((N,K))-np.log(K) # init at unif
+    alphas=np.zeros(K)
+    betas=np.zeros(K)
+    logLs=np.zeros(K)
+    logws=np.zeros(K)
+    ms=np.zeros((K,D))
+    Ws=np.ones((K,D,D))
+    logdetWs=np.zeros(K)
+    invWs=np.ones((K,D,D))
+    nus=np.ones(K)
+
+    for t in range(iterations):
+        print('Iter '+str(t+1)+'/'+str(iterations),end='\r')
+        Nks=np.sum(np.exp(lrs),axis=0)
+
+
+        # variational M
+        for k in range(K):
+            # get summary statistics
+            Nk=Nks[k]
+            yk=np.sum(np.exp(lrs[:,k]).reshape(N,1)*y,axis=0)/Nk
+            Sk=np.sum(np.exp(lrs[:,k]).reshape(N,1,1)*(y.reshape(N,D,1)-yk.reshape(1,D,1))*(y.reshape(N,1,D)-yk.reshape(1,1,D)),axis=0)/Nk
+
+            # update Dirichlet params
+            alphas[k]=alpha0+Nk
+
+            # update mean params
+            betas[k]=beta0+Nk
+            ms[k,:]=(beta0*mu0[k,:]+Nk*yk)/betas[k]
+
+            # update cov params
+            invWs[k,:,:]=sigma0[k,:,:]+Nk*Sk+beta0*Nk/(beta0+Nk)*(yk-mu0[k,:])[:,np.newaxis]*(yk-mu0[k,:])[np.newaxis,:]
+            Ws[k,:,:]=np.linalg.inv(invWs[k])
+            nus[k]=nu0+Nk
+
+            # define aux quantities
+            sign,logdetinvWk = np.linalg.slogdet(invWs[k,:,:])
+            logdetWs[k]=-logdetinvWk
+            logLs[k]=np.sum(psi(0.5*(nus[k]+1-np.arange(1,D+1))))+D*np.log(2)+logdetWs[k]
+            logws[k]=psi(alphas[k])+psi(np.sum(alphas))
+        # end for
+
+        # variational E
+        for k in range(K):
+            lrs[:,k]=logws[k]+0.5*logLs[k]-0.5*D/betas[k]
+            gauss_term=0.5*nus[k]*np.sum(np.sum((y.reshape(N,D,1)-ms[k,:].reshape(1,D,1))*Ws[k]*(y.reshape(N,1,D)-ms[k,:].reshape(1,1,D)),axis=-1),axis=-1)
+            lrs[:,k]-=gauss_term
+        # end for
+
+        # normalize weights
+        lrs=lrs-LogSumExp(lrs.T)[:,np.newaxis]
+    # end for
+
+    return alphas,lrs,ms,betas,invWs,nus
