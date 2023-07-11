@@ -144,9 +144,9 @@ def meanfieldGMM(y,mu0,sigma0,iterations):
     K=mu0.shape[0]
 
     # init params
-    alpha0=1.    # weights w Dirichlet prior param, small = let the data speak
+    alpha0=1. # weights w Dirichlet prior param, small = let the data speak
     beta0=0.1*N  # means precision. Default: prior sample size = 10% of observed sample size
-    nu0=N-D-2
+    nu0=1.#N-D-2
 
     # init arrays
     lrs=np.zeros((N,K))-np.log(K) # init at unif
@@ -189,7 +189,7 @@ def meanfieldGMM(y,mu0,sigma0,iterations):
             logdetWs[k]=-logdetinvWk
             logLs[k]=np.sum(psi(0.5*(nus[k]+1-np.arange(1,D+1))))+D*np.log(2)+logdetWs[k]
             logws[k]=psi(alphas[k])+psi(np.sum(alphas))
-        # end for
+            # end for
 
         # variational E
         for k in range(K):
