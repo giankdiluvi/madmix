@@ -535,14 +535,14 @@ class GMMRef(Distribution):
         tau0 : float, means prior precision
         temp : float, temperature of Concrete relaxation
     """
-    def __init__(self, N,K,tau0=1.,temp=1.):
+    def __init__(self, N,K,D,tau0=1.,temp=1.):
         self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(K)/K)
         self.dirichlet = torch.distributions.dirichlet.Dirichlet(concentration=torch.ones(K))
         self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(K), torch.eye(K)/np.sqrt(tau0))
         self.invwis = torch.distributions.wishart.Wishart(df=N/K,covariance_matrix=torch.eye(K))
         self.K = K
         self.N = N
-        self.D = 2 # for now only 2D data
+        self.D = D
 
     def log_prob(self, value):
         relcat_lp = torch.zeros(value.shape[0])
@@ -550,7 +550,7 @@ class GMMRef(Distribution):
 
         idx=np.diag_indices(self.D)
         xc=value[...,self.N*self.K:].T
-        ws,mus,Hs=concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B), D=2 ONLY FOR NOW
+        ws,mus,Hs=concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B)
         Sigmas=HtoSigma(Hs) #(K,D,D,B)
         xc_lp = torch.zeros(ws.shape[1])
         #xc_lp=self.dirichlet.log_prob(project_simplex_2d(ws.T)) # this is just 0 since ref is uniform
@@ -616,7 +616,7 @@ def gmm_concrete_sample(pred_x,pred_w,pred_mus,pred_sigmas,temp):
 #========================================
 
 
-def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
+def createGMMRealNVP(temp,depth,N,K,D,tau0,width=32):
     """
     Wrapper to init a RealNVP class for a GMM problem
 
@@ -629,13 +629,13 @@ def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
         depth  : int, number of couplings (transformations)
         N      : int, number of observations from the GMM
         K      : int, mixture size
+        D      : int, dimension of data
         tau0   : float, prior precision for means
-        width : int, width of the linear layers
+        width  : int, width of the linear layers
 
     Outputs:
         flow   : Module, RealNVP
     """
-    D=2 # currently only 2D examples supported
     dim=int(K*N+K+K*D+K*(D+D*(D-1)/2))
 
     # create channel-wise masks of appropriate size
@@ -645,7 +645,7 @@ def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
     masks=masks.repeat(depth//2,1)
 
     # define reference distribution
-    ref = GMMRef(N,K,tau0,temp)
+    ref = GMMRef(N,K,D,tau0,temp)
 
     # define scale and translation architectures
     net_s = lambda: nn.Sequential(
@@ -667,7 +667,7 @@ def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
 #========================================
 
 
-def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+def trainGMMRealNVP(temp,depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
 
@@ -676,6 +676,7 @@ def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,s
         depth     : int, number of couplings (transformations)
         N         : int, number of observations from the GMM
         K         : int, mixture size
+        D         : int, dimension of data
         tau0      : float, prior precision for means
         sample    : (B,K'') array, samples from target for training; B is the Monte Carlo sample size
         width     : int, width of the linear layers
@@ -693,7 +694,7 @@ def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,s
     torch.manual_seed(seed)
 
     # create flow
-    flow=createGMMRealNVP(temp,depth,N,K,tau0,width)
+    flow=createGMMRealNVP(temp,depth,N,K,D,tau0,width)
 
     # train flow
     optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
