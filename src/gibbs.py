@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 from discrete_mixflows import *
 
 """
@@ -83,122 +84,88 @@ Gaussian mixture model Gibbs sampler
 ########################################
 ########################################
 """
-def gibbs_gmm(y,w,tau,tau0,steps,burnin_pct=0.25,verbose=False,seed=0):
+
+def gibbs_gmm(y,mu0,sigma0,w0,steps,burnin_pct,seed=0):
     """
-    Run a Gibbs sampler for the means mu and labels x of
+    Run a Gibbs sampler for the labels x, weights w,
+    means mu, and covariance matrices sigma of
     a Gaussian mixture model with obsevations
-    yn~sum_k wk Gaussian(muk,tauk), n=1,...,N
-    and known weights w and precisions tau
+    yn~sum_k wk Gaussian(muk,sigmak), n=1,...,N, yn in R^D
 
     Inputs:
-        y          : (N,) array, observations
-        w          : (K,) array, weights
-        tau        : (K,) array, precisions
-        tau0       : float, prior precision for the mean
+        y          : (N,D) array, observations (N is no. of obs, d is dimension of each obs)
+        mu0        : (K,D) array, initial means (K is number of clusters)
+        sigma0     : (K,D,D) array, initial covariances
+        w0         : (K,) array, initial weights
         steps      : int, number of steps to run the sampler from (after burn-in)
         burnin_pct : float, percentage of burn-in desired
-        verbose    : boolean, indicates whether to print messages
         seed       : int, random seed
 
      Outputs:
-         xs        : (N,steps) array, labels samples
-         mus       : (K,steps) array, means samples
+         xs        : (steps,N) array, labels samples
+         ws        : (steps,K) array, weights samples
+         mus       : (steps,K,D) array, means samples
+         sigmas    : (steps,K,D,D) array, covariance matrices samples
 
     Note: the total number of steps the sampler is run for is
-          (T=steps+burn_in), where (burn_in=T*burnin_pct)
-          the total burn-in steps is therefore
+          (T=steps+burn_in), where (burn_in=T*burnin_pct).
+          The total burn-in steps is therefore
           (steps*burnin_pct/(1-burnin_pct))
     """
     np.random.seed(0+seed)
-    N=y.shape[0]
-    K=w.shape[0]
+
+    # get sizes, calculate steps
+    N,d=y.shape
+    K=mu0.shape[0]
     burnin_steps=int(steps*burnin_pct/(1-burnin_pct))
+    total_steps=burnin_steps+steps+1
 
-    # generate initial values
-    x=np.random.randint(low=0,high=K,size=N)
-    mu=np.random.randn(K)/np.sqrt(tau0)
-    if steps==0: return x,mu
+    # init params
+    xs=np.zeros((total_steps,N),dtype=int)
+    xs[0,:]=np.random.randint(low=0,high=K,size=N)
+    ws=np.ones((total_steps,K))/K
+    ws[0,:]=w0
+    mus=np.zeros((total_steps,K,d))
+    mus[0,:,:]=mu0
+    sigmas=np.ones((total_steps,K,d,d))
+    sigmas[0,:,:,:]=sigma0
 
-    # do burn-in pass
-    for t in range(burnin_steps):
-        if verbose: print('Burn-in: '+str(t+1)+'/'+str(burnin_steps),end='\r')
-        #print(x.shape,mu.shape)
-        x,mu=gibbs_gmm_update(x,mu,y,w,tau,tau0)
+    for t in range(total_steps-1):
+        if t<burnin_steps: print('Burn-in: '+str(t+1)+'/'+str(burnin_steps),end='\r')
+        if t>=burnin_steps: print('Sampling: '+str(t+1-burnin_steps)+'/'+str(steps),end='\r')
+
+        # update indices ###
+        # first obtain log probabilities
+        tmplprbs=np.ones((N,K))*np.log(ws[t,:])
+        for k in range(K): tmplprbs[:,k]+=stats.multivariate_normal(mus[t,k,:],sigmas[t,k,:,:]).logpdf(y)
+        # then sample using gumbel-max trick
+        G=np.random.gumbel(size=(N,K))
+        tmpx=np.argmax(tmplprbs+G,axis=1)
+        xs[t+1,:]=tmpx
+
+        # get cluster summaries
+        x_tuple=np.zeros((N,K),dtype=int)
+        x_tuple[np.arange(N),tmpx]=1
+        Nks=np.sum(x_tuple,axis=0)
+
+        # update weights ###
+        tmpw=np.random.dirichlet(Nks+1)
+        ws[t+1,:]=tmpw
+
+        # update means and covariances ###
+        for k in range(K):
+            yk=y[tmpx==k,:] # cluster elements, avg in next line
+            Nk=yk.shape[0]
+
+            # update covariance
+            Sk=Nk*np.cov(yk,rowvar=False) # cluster covariance
+            tmpsigma=sigmas[t,k,:,:]
+            if np.linalg.cond(Sk) < 1/sys.float_info.epsilon: tmpsigma = stats.invwishart(Nk-d-1,Sk).rvs() # Sk invertible
+            sigmas[t+1,k,:,:]=tmpsigma
+
+            # update mean
+            mus[t+1,k,:]=np.random.multivariate_normal(np.mean(yk,axis=0),sigmas[t+1,k,:,:]/Nk)
+        # end for
     # end for
-
-    # do sampling pass
-    xs=np.zeros((N,steps+1),dtype=int)
-    xs[:,0]=x
-    mus=np.zeros((K,steps+1))
-    mus[:,0]=mu
-    for t in range(steps):
-        if verbose: print('Sampling: '+str(t+1)+'/'+str(steps),end='\r')
-        tmpx,tmpmu=gibbs_gmm_update(xs[:,t],mus[:,t],y,w,tau,tau0)
-        xs[:,t+1]=tmpx
-        mus[:,t+1]=tmpmu
-    # end for
-
-    # sort according to latest mu
-    sort_idx=np.argsort(mus[:,-1])
-    mus=mus[sort_idx,:]
-    xsc=np.zeros(xs.shape)
-    for k in range(K): xsc[xs==k]=sort_idx[k]
-
-    return xsc[:,1:],mus[:,1:]
-
-
-def gibbs_gmm_update(x,mu,y,w,tau,tau0):
-    """
-    Do a single pass of a Gibbs sampler for a Gaussian mixture model
-    starting at x and mu
-
-    Inputs:
-        x          : (N,) array, current labels
-        mu         : (K,) array, current means
-        y          : (N,) array, observations
-        w          : (K,) array, weights
-        tau        : (K,) array, precisions
-        tau0       : float, prior precision for the mean
-
-     Outputs:
-         x        : (N,) array, updated labels
-         mu       : (K,) array, updated means
-    """
-    N=x.shape[0]
-    K=w.shape[0]
-
-    # update x probs
-    x_probs=w[np.newaxis,:]*np.exp(gauss_lp_allmeans(y,mu,tau))
-    x_probs[x_probs<1e-32]=1e-32
-    x_probs=x_probs/np.sum(x_probs,axis=1)[:,np.newaxis]
-
-    # sample x via direct inversion (to avoid for loops or np.random.choice)
-    Fx=np.cumsum(x_probs,axis=1)
-    u=np.random.rand(N,1)
-    x_=np.argmax(Fx>u,axis=1)
-
-    # sample mu
-    idx=(x_==np.arange(0,K,dtype=int)[:,np.newaxis])
-    N_pool=np.sum(idx,axis=1)
-    tau_pool=N_pool+tau0
-    y_pool=np.sum(y*idx,axis=1)/tau_pool
-    mu_=y_pool+np.random.randn(K)/np.sqrt(tau_pool)
-
-    return x_,mu_
-
-
-def gauss_lp_allmeans(y,mu,tau):
-    """
-    Evaluate a Gaussian log pdf
-    This function evaluates phi(yn;muk,tauk)
-    for all combinations of n=1,...,N and k=1,...,K
-
-    Inputs:
-        y          : (N,) array, observations
-        mu         : (K,) array, means
-        tau        : (K,) array, precisions
-
-     Outputs:
-         x        : (N,K) array, log pdfs
-    """
-    return -0.5*((y[:,np.newaxis]-mu[np.newaxis,:])**2)*tau[np.newaxis,:]-0.5*np.log(2*np.pi/tau[np.newaxis,:])
+    burnin_steps+=1 # to account for initial draw
+    return xs[burnin_steps:,...],ws[burnin_steps:,...],mus[burnin_steps:,...],sigmas[burnin_steps:,...]
