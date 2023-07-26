@@ -538,8 +538,8 @@ class GMMRef(Distribution):
     def __init__(self, N,K,D,tau0=1.,temp=1.):
         self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(K)/K)
         self.dirichlet = torch.distributions.dirichlet.Dirichlet(concentration=torch.ones(K))
-        self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(K), torch.eye(K)/np.sqrt(tau0))
-        self.invwis = torch.distributions.wishart.Wishart(df=N/K,covariance_matrix=torch.eye(K))
+        self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(D), torch.eye(D)/np.sqrt(tau0))
+        self.invwis = torch.distributions.wishart.Wishart(df=N/K,covariance_matrix=torch.eye(D))
         self.K = K
         self.N = N
         self.D = D
