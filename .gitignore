@@ -28,3 +28,6 @@ Manifest.toml
 
 # no data files
 /ipynb/dat/*
+
+# no deprecated gibbs
+*/gibbs_deprecated.py
