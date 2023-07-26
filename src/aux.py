@@ -14,22 +14,7 @@ def LogSumExp(w):
     """
 
     wmax = np.amax(w,axis=0)
-    return wmax + np.log(np.sum(np.exp(w-wmax[np.newaxis,:]),axis=0))
-
-def LogSumExp2(w,axis=0):
-    """
-    LogSumExp trick
-
-    inputs:
-        w    : (N,d) array, exponents
-        axis : int, axis in which to take maximum
-
-    outputs:
-        w'   : (d,) array, log(sum(exp(w),axis=axis))
-    """
-
-    wmax = np.amax(w,axis=axis)
-    return wmax + np.log(np.sum(np.exp(w-wmax[np.newaxis,:]),axis=axis))
+    return wmax + np.log(np.sum(np.exp(w-wmax[np.newaxis,...]),axis=0))
 
 
 """
