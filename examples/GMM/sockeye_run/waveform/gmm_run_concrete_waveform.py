@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import argparse
 import sys, time, pickle
 
@@ -65,7 +66,7 @@ ws_concrete = torch.from_numpy(pred_w)
 mus_concrete = torch.from_numpy(pred_mu)
 sigmas_concrete = torch.from_numpy(pred_sigma)
 
-N,K = pred_x.shape[0], pred_mu.shape[0]
+N,K,D = pred_x.shape[1], pred_mu.shape[1], pred_mu.shape[2] # , 3, 2
 tau0=0.1
 
 
@@ -103,7 +104,7 @@ print('Starting optimization')
 t0 = time.perf_counter()
 conc_sample=gmm_concrete_sample(xs_concrete,ws_concrete,mus_concrete,sigmas_concrete,temp)
 tmp_flow,tmp_loss=trainGMMRealNVP(
-    temp=temp,depth=depth,N=N,K=K,tau0=tau0,sample=conc_sample,width=width,max_iters=max_iters,lr=lr,seed=2023,verbose=True
+    temp=temp,depth=depth,N=N,K=K,D=D,tau0=tau0,sample=conc_sample,width=width,max_iters=max_iters,lr=lr,seed=2023,verbose=True
 )
 
 cpu_time=time.perf_counter()-t0
