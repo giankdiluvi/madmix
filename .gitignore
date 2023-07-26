@@ -29,5 +29,7 @@ Manifest.toml
 # no data files
 /ipynb/dat/*
 
-# no deprecated gibbs
+# ignore deprecated code
 */gibbs_deprecated.py
+*/concrete_deprecated.py
+examples/GMMOld/*
