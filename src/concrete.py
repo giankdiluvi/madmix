@@ -7,6 +7,8 @@ Implementation in torch
 """
 
 import numpy as np
+from aux import LogSumExp
+
 import torch
 from torch import nn
 from torch import distributions
@@ -73,6 +75,194 @@ def idx_flattenBinary(x):
     """
     return np.sum(x.T*np.power(2,np.arange(0,x.shape[0])),axis=1)
 #========================================
+
+
+# unflatten functions for GMM + logCholesly decomposition
+def concrete_gmm_flatten(ws,mus,Hs):
+    """
+    Flatten weights, meand, and logCholeskys into 2D array
+
+    Inputs:
+        ws  : (K,B) array, weights
+        mus : (K,D,B) array, cluster means
+        Hs  : (K,D,D,B) array, cluster logCholesky matrices
+
+    Outpus:
+        xc  : (K',B) array, flattened values
+
+    Note:
+    K is the number of clusters, D is data dimension,
+    and B is the number of data points (for vectorizing)
+    K'= K (weights) + KxD (means) + Kx(D+DChoose2) (covariances)
+    """
+    K,D,B=mus.shape
+
+    flat_mus=mus.reshape(K*D,B)
+    idx=torch.tril_indices(D,D)
+    flat_Hs=Hs[:,idx[0],idx[1],:]                     # recover lower triangular entries
+    flat_Hs=flat_Hs.reshape(int(K*D*(1+0.5*(D-1))),B) # correct shape
+    return torch.vstack((ws,flat_mus,flat_Hs))
+
+
+def concrete_gmm_unflatten(xc,K,D):
+    """
+    Unflatten xc into weights, meand, and covariances
+
+    Inputs:
+        xc  : (K',B) array, flattened values
+
+    Outputs:
+        ws  : (K,B) array, weights
+        mus : (K,D,B) array, cluster means
+        Hs  : (K,D,D,B) array, cluster logCholesky matrices
+
+    Note:
+    K is the number of clusters, D is data dimension,
+    and B is the number of data points (for vectorizing)
+    K'= K (weights) + KxD (means) + Kx(D+DChoose2) (covariances)
+    """
+    B=xc.shape[-1]
+
+    # recover each flattened var
+    ws=xc[:K,:]
+    flat_mus=xc[K:(K*D+K),:]
+    flat_Hs=xc[(K*D+K):,:].reshape(K,int(D*(1+0.5*(D-1))),B)
+
+    # unflatten separately
+    mus=flat_mus.reshape(K,D,B)
+    Hs=torch.zeros((K,D,D,B))
+    idx=torch.tril_indices(D,D)
+    Hs[:,idx[0],idx[1],:]=flat_Hs
+
+    return ws,mus,Hs
+
+
+
+def full_concrete_gmm_unflatten(x,N,K,D):
+    """
+    Unflatten x=[xd,xc] into label unnormalized logprbs, weights, means, and logCholesky factors
+
+    Inputs:
+        x   : (B,K'') array, flattened values
+
+    Outputs:
+        xd  : (N,K,B) array, label log probabilities (unnormalized)
+        ws  : (K,B) array, weights
+        mus : (K,D,B) array, cluster means
+        Hs  : (K,D,D,B) array, cluster logCholesky matrices
+
+    Note:
+    K is the number of clusters, D is data dimension,
+    and B is the number of data points (for vectorizing)
+    K'' = NK (labels) + K (weights) + KxD (means) + Kx(D+DChoose2) (covariances)
+    """
+    x=x.T
+    B=x.shape[1]
+
+    xd=x[:(N*K),:].reshape(N,K,B)
+    xc=x[(N*K):,:]
+    ws,mus,Hs=concrete_gmm_unflatten(xc,K,D)
+
+    return xd,ws,mus,Hs
+
+
+def concrete_gmm_unpack(x,N,K,D):
+    """
+    Unpack x=[xd,xc] into label normalized logprbs, weights, means, and covariances
+
+    Inputs:
+        x      : (B,K'') array, flattened values
+
+    Outputs:
+        xd     : (N,K,B) array, label log probabilities
+        ws     : (K,B) array, weights
+        mus    : (K,D,B) array, cluster means
+        Sigmas : (K,D,D,B) array, cluster covariance matrices
+
+    Note:
+    K is the number of clusters, D is data dimension,
+    and B is the number of data points (for vectorizing)
+    K'' = NK (labels) + K (weights) + KxD (means) + Kx(D+DChoose2) (covariances)
+
+    Note:
+    The label probabilities tensor will be converted to a np array and gradients will be detached
+    """
+    xd,ws,mus,Hs=full_concrete_gmm_unflatten(x,N,K,D)
+    xd=xd.detach().numpy()
+    xd=xd-LogSumExp(np.moveaxis(xd,1,0))[:,None,:]
+
+    Sigmas=HtoSigma(Hs)
+
+    return xd,ws,mus,Sigmas
+#========================================
+
+
+
+def HtoSigma(Hs):
+    """
+    Transform logCholesky factors into covariance matrices
+
+    Inputs:
+        Hs : (K,D,D,B) array, B observations of the K cluster logCholesky factors
+
+    Outpus:
+        Sigmas : (K,D,D,B) array, B observations of the K cluster covariances
+    """
+
+    idx=np.diag_indices(Hs.shape[1])
+    Ls=torch.clone(Hs)
+    Ls[:,idx[0],idx[1],:]=torch.exp(Hs[:,idx[0],idx[1],:])
+    Ls=torch.moveaxis(Ls,3,1) # so matrices are stacked in last two axes for matmul
+    Sigmas=torch.matmul(Ls,torch.moveaxis(Ls,2,3))
+    return torch.moveaxis(Sigmas,1,3)
+
+def SigmatoH(Sigmas):
+    """
+    Transform covariance matrices into logCholesky factors
+
+    Inputs:
+        Sigmas : (K,D,D,B) array, B observations of the K cluster covariances
+
+    Outpus:
+        Hs : (K,D,D,B) array, B observations of the K cluster logCholesky factors
+    """
+
+    idx=np.diag_indices(Sigmas.shape[1])
+    Ls=torch.linalg.cholesky(torch.moveaxis(Sigmas,3,1))
+    Hs=torch.clone(Ls)
+    Hs[:,:,idx[0],idx[1]]=torch.log(Ls[:,:,idx[0],idx[1]])
+    return torch.moveaxis(Hs,1,3)
+
+
+def project_simplex_2d(v):
+        """
+        Helper function, assuming that all vectors are arranged in rows of v.
+
+        :param v: NxD torch tensor; Duchi et al. algorithm is applied to each row in vectorized form
+        :return: w: result of the projection
+
+        NOTE: taken from https://github.com/smatmo/ProjectionOntoSimplex/blob/master/project_simplex_pytorch.py
+        and modified by Gian Carlo Diluvi
+        """
+        with torch.no_grad():
+            shape = v.shape
+            if shape[1] == 1:
+                w = v.clone().detach()
+                w[:] = 1.
+                return w
+
+            mu = torch.sort(v, dim=1)[0]
+            mu = torch.flip(mu, dims=(1,))
+            cum_sum = torch.cumsum(mu, dim=1)
+            j = torch.unsqueeze(torch.arange(1, shape[1] + 1, dtype=mu.dtype, device=mu.device), 0)
+            rho = torch.sum(mu * j - cum_sum + 1. > 0.0, dim=1, keepdim=True) - 1
+            max_nn = cum_sum[torch.arange(shape[0]), rho[:, 0]]
+            theta = (torch.unsqueeze(max_nn, -1) - 1.) / (rho.type(max_nn.dtype) + 1)
+            w = torch.clamp(v - theta, min=0.0)
+            return w
+#========================================
+
+
 
 """
 ########################################
@@ -328,18 +518,16 @@ def trainRealNVP(temp,depth,lprbs,width=32,max_iters=1000,lr=1e-4,mc_ss=1000,see
 Gaussian mixture model training
 ########################################
 ########################################
-
-taken from
-https://colab.research.google.com/github/senya-ashukha/real-nvp-pytorch/blob/master/real-nvp-pytorch.ipynb#scrollTo=p5YX9_EW3_EU
-and adapted slightly
 """
 
 
 class GMMRef(Distribution):
     """
-    Reference distribution for the means and labels of a GMM
-    Uninformative Gaussian for the means,
-    relaxed ExpConcrete for the labels
+    Reference distribution for labels, weights, means, and covariances of a GMM.
+    Uninformative relaxed ExpConcrete for the labels,
+    Dirichlet for the weights,
+    Gaussians for the means,
+    and InverseWishart for the covariances
 
     Inputs:
         N    : int, number of observations from the GMM
@@ -349,48 +537,83 @@ class GMMRef(Distribution):
     """
     def __init__(self, N,K,tau0=1.,temp=1.):
         self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(K)/K)
+        self.dirichlet = torch.distributions.dirichlet.Dirichlet(concentration=torch.ones(K))
         self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(K), torch.eye(K)/np.sqrt(tau0))
+        self.invwis = torch.distributions.wishart.Wishart(df=N/K,covariance_matrix=torch.eye(K))
         self.K = K
         self.N = N
+        self.D = 2 # for now only 2D data
 
     def log_prob(self, value):
-        mvn_lp = self.gauss.log_prob(value[...,:self.K])
         relcat_lp = torch.zeros(value.shape[0])
-        for n in range(self.N): relcat_lp += self.relcat.log_prob(value[...,self.K+n*self.K+torch.arange(0,self.K)])
-        return relcat_lp+mvn_lp
+        for n in range(self.N): relcat_lp += self.relcat.log_prob(value[...,n*self.K+torch.arange(0,self.K)])
+
+        idx=np.diag_indices(self.D)
+        xc=value[...,self.N*self.K:].T
+        ws,mus,Hs=concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B), D=2 ONLY FOR NOW
+        Sigmas=HtoSigma(Hs) #(K,D,D,B)
+        xc_lp = torch.zeros(ws.shape[1])
+        #xc_lp=self.dirichlet.log_prob(project_simplex_2d(ws.T)) # this is just 0 since ref is uniform
+        for k in range(self.K):
+            xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+            xc_lp += self.D*torch.log(torch.tensor([2])) + torch.sum((self.D-torch.arange(self.D)+1)[:,None]*Hs[k,idx[0],idx[1],:],axis=0) # determinant Jacobian of log-Cholesky decomposition
+            xc_lp += self.gauss.log_prob(mus[k,...].T)
+        # end for
+        return relcat_lp+xc_lp
 
     def sample(self,sample_shape=torch.Size()):
         relcat_sample=self.relcat.sample(sample_shape)
         for n in range(self.N-1): relcat_sample = torch.hstack((relcat_sample,self.relcat.sample(sample_shape)))
-        mvn_sample=self.gauss.sample(sample_shape)
-        return torch.hstack((mvn_sample,relcat_sample))
+
+        ws_sample = self.dirichlet.sample(sample_shape).T
+        sigmas_sample = torch.zeros((self.K,self.D,self.D,sample_shape[0]))
+        mus_sample = torch.zeros((self.K,self.D,sample_shape[0]))
+        for k in range(self.K-1):
+            sigmas_sample[k,...] = torch.moveaxis(self.invwis.sample(sample_shape),0,2)
+            mus_sample[k,...] = self.gauss.sample(sample_shape).T
+        # end for
+        xc_sample = concrete_gmm_flatten(ws_sample,mus_sample,sigmas_sample).T
+        return torch.hstack((relcat_sample,xc_sample))
 #========================================
 
 
-def gmm_concrete_sample(pred_x,pred_mu,temp):
+
+def gmm_concrete_sample(pred_x,pred_w,pred_mus,pred_sigmas,temp):
     """
     Generate sample for learning GMM with RealNVP
     using a Concrete relaxation for the labels
 
     Inputs:
-        pred_x  : (N,steps) array, predicted label values (from `gibbs.gibbs_gmm`)
-        pred_mu : (K,steps) array, predicted mean values (from `gibbs.gibbs_gmm`)
-        temp    : float, temperature of Concrete relaxation
+        pred_x      : (steps,N) array, predicted label values (from `gibbs.gibbs_gmm`)
+        pred_w      : (steps,K) array, predicted weights (from `gibbs.gibbs_gmm`)
+        pred_mus    : (steps,K,D) array, predicted means (from `gibbs.gibbs_gmm`)
+        pred_sigmas : (steps,K,D,D) array, predicted covariance matrices (from `gibbs.gibbs_gmm`)
+        temp        : float, temperature of Concrete relaxation
 
     Outputs:
-        conc_sample : (steps,K*(N+1)) array, samples to be used in training
+        conc_sample : (steps,K'') array, samples to be used in training
+
+    Note: K'' = NK (labels) + K (weights) + KD (means) + Kx(D+DChoose2) (covariances, log-Cholesky decomposed)
     """
     # estimate probabilities of each xn
-    x_prbs=np.sum(pred_x==np.arange(0,pred_mu.shape[0],dtype=int)[:,np.newaxis,np.newaxis],axis=-1)
-    x_prbs=(x_prbs/np.sum(x_prbs,axis=0)[np.newaxis,:]).T
+    pred_x=pred_x.T
+    x_prbs=torch.sum(pred_x==torch.arange(0,pred_mus.shape[1],dtype=int)[:,None,None],axis=-1)
+    x_prbs=(x_prbs/torch.sum(x_prbs,axis=0)[None,:]).T
 
     # generate sample for training using Gibbs output and Gumbel soft-max
-    G=np.random.gumbel(size=(pred_x.shape[-1],x_prbs.shape[0],x_prbs.shape[1]))
-    conc_sample=(x_prbs[np.newaxis,...]+G)/temp-np.log(np.sum(np.exp((x_prbs[np.newaxis,...]+G)/temp),axis=-1))[...,np.newaxis]
+    G=torch.from_numpy(np.random.gumbel(size=(pred_x.shape[-1],x_prbs.shape[0],x_prbs.shape[1])))
+    conc_sample=(x_prbs[np.newaxis,...]+G)/temp-torch.log(torch.sum(torch.exp((x_prbs[None,...]+G)/temp),axis=-1))[...,None]
     conc_sample=conc_sample.reshape(pred_x.shape[-1],x_prbs.shape[0]*x_prbs.shape[1])
-    conc_sample=torch.tensor(np.hstack((pred_mu.T,conc_sample))).float()
+
+    # deal with continuous variables
+    Hs=SigmatoH(torch.moveaxis(pred_sigmas,0,3))
+    xc=concrete_gmm_flatten(pred_w.T,torch.moveaxis(pred_mus,0,2),Hs).T
+
+    # merge everything
+    conc_sample=torch.hstack((conc_sample,xc)).float()
 
     return conc_sample
+#========================================
 
 
 def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
@@ -412,7 +635,8 @@ def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
     Outputs:
         flow   : Module, RealNVP
     """
-    dim=K*(N+1)
+    D=2 # currently only 2D examples supported
+    dim=int(K*N+K+K*D+K*(D+D*(D-1)/2))
 
     # create channel-wise masks of appropriate size
     masks=torch.zeros((2,dim))
@@ -440,7 +664,7 @@ def createGMMRealNVP(temp,depth,N,K,tau0,width=32):
         nn.Linear(width, dim)
     )
     return RealNVP(net_s, net_t, masks, ref, gmm=True)
-
+#========================================
 
 
 def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
@@ -453,12 +677,18 @@ def trainGMMRealNVP(temp,depth,N,K,tau0,sample,width=32,max_iters=1000,lr=1e-4,s
         N         : int, number of observations from the GMM
         K         : int, mixture size
         tau0      : float, prior precision for means
-        sample    : (B,K*(N+1)) array, samples from target for training; B is the Monte Carlo sample size
+        sample    : (B,K'') array, samples from target for training; B is the Monte Carlo sample size
         width     : int, width of the linear layers
         max_iters : int, max number of Adam iters
         lr        : float, Adam learning rate
         seed      : int, for reproducinility
         verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
+
+    Output:
+        flow      : distribution, trained normalizing flow
+        losses    : (maxiters,) array with loss traceplot
+
+    Note: K'' = NK (labels) + K (weights) + KD (means) + Kx(D+DChoose2) (covariances, which will be log-Cholesky decomposed)
     """
     torch.manual_seed(seed)
 
