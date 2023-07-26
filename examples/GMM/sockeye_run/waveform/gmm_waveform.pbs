@@ -4,11 +4,11 @@
 #PBS -l walltime=12:00:00,select=1:ncpus=20:mem=16gb
 #PBS -J 1-144:1
 #PBS -A st-tdjc-1
-#PBS -N gmm-concrete
+#PBS -N gmm-concrete-waveform
 #PBS -m abe
 #PBS -M gian.diluvi@stat.ubc.ca
-#PBS -o /scratch/st-tdjc-1/madmix/gmm/output/concrete_^array_index^.txt
-#PBS -e /scratch/st-tdjc-1/madmix/gmm/errors/concrete_^array_index^.txt
+#PBS -o /scratch/st-tdjc-1/madmix/gmm/waveform/output/concrete_^array_index^.txt
+#PBS -e /scratch/st-tdjc-1/madmix/gmm/waveform/errors/concrete_^array_index^.txt
 ################################################################################
 
 module load python/3.8.10
@@ -19,10 +19,10 @@ cd $PBS_O_WORKDIR
 
 export PYTHONPATH=.
 
-cd /arc/project/st-tdjc-1/madmix/examples/gmm/
+cd /arc/project/st-tdjc-1/madmix/examples/gmm/waveform/
 
 params=`sed "${PBS_ARRAY_INDEX}q;d" gmm_settings.txt`  # read the settings file in current iteration
 param_array=( $params )                            # save current row of settins in param_array
 
 # run code
-python gmm_run_concrete.py --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/gmm/'
+python gmm_run_concrete_waveform.py --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/gmm/waveform/'

@@ -16,7 +16,7 @@ from aux import *
 #   arg parse options   #
 #########################
 #########################
-parser = argparse.ArgumentParser(description="Fit a RealNVP normalizing flow with Concrete relaxed nodes to a GMM")
+parser = argparse.ArgumentParser(description="Fit a RealNVP normalizing flow with Concrete relaxed nodes to a GMM with Palmer penguins data set")
 
 parser.add_argument('--temp', type = float, default = 0.1,
     help = 'Temperature of Concrete relaxation')
@@ -55,7 +55,16 @@ idx       = int(args.idx)
 ########################
 ########################
 pred_x  = pkl_load('pred_x')
+pred_w = pkl_load('pred_w')
 pred_mu = pkl_load('pred_mu')
+pred_sigma = pkl_load('pred_sigma')
+
+# convert gibbs output to torch tensors
+xs_concrete = torch.from_numpy(pred_x)
+ws_concrete = torch.from_numpy(pred_w)
+mus_concrete = torch.from_numpy(pred_mu)
+sigmas_concrete = torch.from_numpy(pred_sigma)
+
 N,K = pred_x.shape[0], pred_mu.shape[0]
 tau0=0.1
 
@@ -66,7 +75,7 @@ tau0=0.1
 #    Settings          #
 ########################
 ########################
-print('Training a RealNVP normalizing flow with a Concrete relaxation for a GMM')
+print('Training a RealNVP normalizing flow with a Concrete relaxation for a GMM with the Palmer penguin data set')
 print()
 print('Mixture settings:')
 print('Mixture size K: '+str(K))
@@ -92,7 +101,7 @@ print()
 ########################
 print('Starting optimization')
 t0 = time.perf_counter()
-conc_sample=gmm_concrete_sample(pred_x,pred_mu,temp)
+conc_sample=gmm_concrete_sample(xs_concrete,ws_concrete,mus_concrete,sigmas_concrete,temp)
 tmp_flow,tmp_loss=trainGMMRealNVP(
     temp=temp,depth=depth,N=N,K=K,tau0=tau0,sample=conc_sample,width=width,max_iters=max_iters,lr=lr,seed=2023,verbose=True
 )
