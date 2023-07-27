@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "gmm_run_concrete_penguin.py", line 106, in <module>
+    tmp_flow,tmp_loss=trainGMMRealNVP(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 704, in trainGMMRealNVP
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 558, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
+tensor([[[ 2.8747e+01, -2.2834e+03, -3.0815e+01, -2.2938e+02],
+         [-2.2834e+03,  1.8137e+05,  2.4476e+03,  1.8220e+04],
+         [-3.0815e+01,  2.4476e+03,  6.3557e+01,  3.2864e+02],
+         [-2.2938e+02,  1.8220e+04,  3.2864e+02,  2.0642e+03]],
+
+        [[ 0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00],
+         [ 0.0000e+00,  1.4423e+05,  2.6699e+04,  4.0026e+04],
+         [ 0.0000e+00,  2.6699e+04,  3.5471e+04, -1.6714e+05],
+         [ 0.0000e+00,  4.0026e+04, -1.6714e+05,  1.5341e+06]],
+
+        [[ 2.6499e-42,  1.1437e-19,  3.8231e-20, -2.1068e-20],
+         [ 1.1437e-19,  4.9358e+03,  1.6499e+03, -9.0921e+02],
+         [ 3.8231e-20,  1.6499e+03,  2.2154e+03, -1.4500e+04],
+         [-2.1068e-20, -9.0921e+02, -1.4500e+04,  1.6626e+07]],
+
+        ...,
+
+        [[ 5.0434e+02, -2.8901e+02,  7.5780e+03, -6.6381e+03],
+         [-2.8901e+02,  1.6561e+02, -4.3425e+03,  3.8039e+03],
+         [ 7.5780e+03, -4.3425e+03,  4.2070e+21,  1.9199e+13],
+         [-6.6381e+03,  3.8039e+03,  1.9199e+13,  7.7655e+05]],
+
+        [[ 2.8861e+07,  7.1906e+05, -2.7977e+05,  1.1863e+05],
+         [ 7.1906e+05,  1.8951e+04, -6.9968e+03,  2.5637e+03],
+         [-2.7977e+05, -6.9968e+03,  2.7127e+03, -1.1403e+03],
+         [ 1.1863e+05,  2.5637e+03, -1.1403e+03,  9.4140e+05]],
+
+        [[ 2.5409e+13,  1.0188e+09, -2.5066e+08, -2.1537e+08],
+         [ 1.0188e+09,  4.0850e+04, -1.0050e+04, -8.6355e+03],
+         [-2.5066e+08, -1.0050e+04,  6.4484e+04, -6.2809e+04],
+         [-2.1537e+08, -8.6355e+03, -6.2809e+04,  1.5022e+05]]],
+       grad_fn=<PermuteBackward0>)

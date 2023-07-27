@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "gmm_run_concrete_penguin.py", line 123, in <module>
+    flows     = pkl_load(outpath+'gmm_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/aux.py", line 40, in pkl_load
+    with open(file+'.pkl', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/st-tdjc-1/madmix/gmm/penguin/gmm_flows.pkl'

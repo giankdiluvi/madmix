@@ -1,0 +1,33 @@
+Traceback (most recent call last):
+  File "gmm_run_concrete_waveform.py", line 106, in <module>
+    tmp_flow,tmp_loss=trainGMMRealNVP(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/waveform/../../../src/concrete.py", line 704, in trainGMMRealNVP
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/waveform/../../../src/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/waveform/../../../src/concrete.py", line 558, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 2, 2)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([2, 2]), df: 100.0), but found invalid values:
+tensor([[[ 1.5913e-03,  2.0831e+00],
+         [ 2.0831e+00,  5.1942e+03]],
+
+        [[ 1.7856e-08,  8.5871e-03],
+         [ 8.5871e-03,  2.4362e+18]],
+
+        [[ 1.0639e-05,  3.9586e-02],
+         [ 3.9586e-02,  1.4064e+07]],
+
+        ...,
+
+        [[ 6.4643e-13, -1.3563e-05],
+         [-1.3563e-05,  5.5203e+25]],
+
+        [[ 1.0116e-07, -7.7025e-03],
+         [-7.7025e-03,  5.8746e+02]],
+
+        [[ 1.0279e-13,  1.8122e-05],
+         [ 1.8122e-05,  3.1947e+03]]], grad_fn=<PermuteBackward0>)

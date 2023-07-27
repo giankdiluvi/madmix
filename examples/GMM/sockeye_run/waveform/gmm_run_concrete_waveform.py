@@ -66,7 +66,7 @@ ws_concrete = torch.from_numpy(pred_w)
 mus_concrete = torch.from_numpy(pred_mu)
 sigmas_concrete = torch.from_numpy(pred_sigma)
 
-N,K,D = pred_x.shape[1], pred_mu.shape[1], pred_mu.shape[2] # , 3, 2
+N,K,D = pred_x.shape[1], pred_mu.shape[1], pred_mu.shape[2] # 300, 3, 2
 tau0=0.1
 
 

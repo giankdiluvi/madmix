@@ -1,0 +1,46 @@
+Traceback (most recent call last):
+  File "gmm_run_concrete_penguin.py", line 106, in <module>
+    tmp_flow,tmp_loss=trainGMMRealNVP(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 704, in trainGMMRealNVP
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 558, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
+tensor([[[        inf,        -inf,         nan,         nan],
+         [       -inf,  5.4227e+06,         nan,         nan],
+         [        nan,         nan,         inf,         nan],
+         [        nan,         nan,         nan,         inf]],
+
+        [[ 0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00],
+         [ 0.0000e+00,  4.7164e+08,  4.3445e+08,  1.4613e+07],
+         [ 0.0000e+00,  4.3445e+08,  4.1078e+08,  5.5920e+06],
+         [ 0.0000e+00,  1.4613e+07,  5.5920e+06,  1.6561e+07]],
+
+        [[        inf,        -inf,        -inf,         nan],
+         [       -inf,  1.2832e+04,  5.2438e+06,         nan],
+         [       -inf,  5.2438e+06,  4.3358e+09,         nan],
+         [        nan,         nan,         nan,         inf]],
+
+        ...,
+
+        [[        inf,        -inf,         nan,        -inf],
+         [       -inf,  8.7843e+07,         nan,  4.3855e+08],
+         [        nan,         nan,         inf,        -inf],
+         [       -inf,  4.3855e+08,        -inf,  2.5479e+09]],
+
+        [[ 0.0000e+00,  0.0000e+00,         nan,  0.0000e+00],
+         [ 0.0000e+00,  1.5462e+06,         nan,  4.9992e+07],
+         [        nan,         nan,         inf,         inf],
+         [ 0.0000e+00,  4.9992e+07,         inf,  1.7302e+09]],
+
+        [[        inf,         inf,         inf,        -inf],
+         [        inf,  6.7275e+07,  6.9293e+08, -6.0521e+08],
+         [        inf,  6.9293e+08,  7.3871e+09, -6.2723e+09],
+         [       -inf, -6.0521e+08, -6.2723e+09,  1.3031e+12]]],
+       grad_fn=<PermuteBackward0>)
