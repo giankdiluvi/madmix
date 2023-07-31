@@ -18,6 +18,9 @@ def meanfield1D(lq0,lp,max_iters,gamma):
         lp        : (K,) array, target log probabilities
         max_iters : int, max number of gradient ascent iterations
         gamma     : function, step size (as function)
+
+    Outpus:
+        lq        : (K,) array, updated variational log probabilities
     """
     q=np.exp(lq0)
     for t in range(max_iters): q=q-gamma(t)*(np.log(q)-lp)
