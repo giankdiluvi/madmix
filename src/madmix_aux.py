@@ -212,6 +212,28 @@ def madmix_gmm_flatten(ws,mus,Hs):
     flat_Hs=flat_Hs.reshape(int(K*D*(1+0.5*(D-1))),B) # correct shape
     return np.vstack((ws,flat_mus,flat_Hs))
 
+def madmix_gmm_pack(xd,ud,xc,rho,uc):
+    """
+    Pack output of MAD Mix into a single np array for pickling
+
+    Inputs:
+        xd  : (N,B) array, labels sample (N = # of observations, B = sample size)
+        ud  : (N,B) array, discrete unifs sample
+        xc  : (K',B) array, continuous variables sample
+        rho : (K',B) array, momentum variables sample
+        uc  : (B,) array, continuous unifs sample
+
+    Outpus:
+        out : (L,B) array, stacked samples
+
+    Note:
+    K'= K (weights) + KxD (means) + Kx(D+DChoose2) (covariances)
+    L=N+N+K'+K'+1
+    """
+
+    return np.vstack((xd,ud,xc,rho,uc[None,:]))
+
+
 
 def madmix_gmm_unflatten(xc,K,D):
     """
