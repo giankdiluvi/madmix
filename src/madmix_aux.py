@@ -235,8 +235,6 @@ def madmix_gmm_pack(xd,ud,xc,rho,uc):
     return np.vstack((xd,ud,xc,rho,uc[None,:]))
 
 
-
-
 def madmix_gmm_unflatten(xc,K,D):
     """
     Unflatten xc into weights, meand, and covariances
@@ -269,9 +267,32 @@ def madmix_gmm_unflatten(xc,K,D):
 
     return ws,mus,Hs
 
+def madmix_gmm_unpack(results,N,K,D):
+    """
+    Pack output of MAD Mix into a single np array for pickling
 
+    Outputs:
+        results : (L,B) array, stacked samples
 
+    Inputs:
+        xd  : (N,B) array, labels sample (N = # of observations, B = sample size)
+        ud  : (N,B) array, discrete unifs sample
+        xc  : (K',B) array, continuous variables sample
+        rho : (K',B) array, momentum variables sample
+        uc  : (B,) array, continuous unifs sample
 
+    Note:
+    K'= K (weights) + KxD (means) + Kx(D+DChoose2) (covariances)
+    L=N+N+K'+K'+1
+    """
+    Kp=K+K*D+int(K*(D+D*(D-1)/2))
+    xd=results[:N,:]
+    ud=results[N:(2*N),:]
+    xc=results[(2*N):(2*N+Kp),:]
+    rho=results[(2*N+Kp):(2*N+Kp+Kp),:]
+    uc=np.squeeze(results[(2*N+Kp+Kp):,:])
+
+    return xd,ud,xc,rho,uc
 
 def HtoSigma(Hs):
     """
