@@ -16,7 +16,7 @@ def gen_randq0(N,mu0,sigma0,invsigma0):
 
     Inputs:
         N         : int, sample size
-        mu0       : (K,D) array, cluster means (K=# of clusters, D=dim of data)
+        mu0       : (K,D) array, cluster means (K = # of clusters, D=dim of data)
         sigma0    : (K,D,D) array, cluster covariances
         invsigma0 : (K,D,D) array, cluster inverse covariances (used for Gaussian sampling)
 
@@ -54,17 +54,19 @@ GMM target specification
 ########################################
 ########################################
 """
-def gmm_gen_lp(K,D):
+def gmm_gen_lp(K,y):
     """
     Create a log probability function for the GMM example
 
     Inputs:
         K : int, number of clusters
-        D : int, dimension of data
+        y : (N,D) array, sample (N = # of observations, D=dim of data)
 
     Outpus:
         lp : function, log pmf of labels
     """
+    D=y.shape[1]
+
     def lp(xd,xc,axis=None):
         # compute the univariate log joint and conditional target pmfs
         #
@@ -98,12 +100,13 @@ def gmm_gen_lp(K,D):
 
 
 
-def gmm_gen_grad_lp(K):
+def gmm_gen_grad_lp(K,y):
     """
     Create a logp(xc) generator for the GMM example
 
     Inputs:
         K : int, number of clusters
+        y : (N,D) array, sample (N = # of observations, D=dim of data)
 
     Outpus:
         gen_grad_lp : function, score function generator
