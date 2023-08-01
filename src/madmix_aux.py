@@ -1,5 +1,50 @@
 import numpy as np
+import scipy.stats as stats
 import aux
+
+
+"""
+########################################
+########################################
+GMM approximation specification
+########################################
+########################################
+"""
+def gen_randq0(N,mu0,sigma0,invsigma0):
+    """
+    Create a sampler for q0 in the GMM example
+
+    Inputs:
+        N         : int, sample size
+        mu0       : (K,D) array, cluster means (K=# of clusters, D=dim of data)
+        sigma0    : (K,D,D) array, cluster covariances
+        invsigma0 : (K,D,D) array, cluster inverse covariances (used for Gaussian sampling)
+
+    Outputs:
+        randq0    : function, reference sampler
+    """
+    K,D=mu0.shape
+
+    def randq0(size):
+        # discrete vars
+        rxd  = np.random.randint(low=0,high=K,size=(N,size))
+        rud  = np.random.rand(N,size)
+
+        # continuous vars
+        Kp=K+K*D+int(K*D*(1+0.5*(D-1)))
+        rrho = np.random.laplace(size=(Kp,size))
+        ruc  = np.random.rand(size)
+
+        # weights, means, and covs separately
+        rws=np.random.dirichlet(alpha=np.ones(K),size=size).T
+        rmus=mu0[:,:,None]+np.sum(np.random.randn(K,D,1,size)*invsigma0[:,:,:,None],axis=2)
+        rSigmas=np.zeros((K,D,D,size))
+        for k in range(K): rSigmas[k,:,:,:]=np.moveaxis(stats.invwishart(N,N*sigma0[k,:,:]).rvs(size=size),0,2)
+        rHs=SigmatoH(rSigmas)
+        rxc=madmix_gmm_flatten(rws,rmus,rHs)
+        return rxd,rud,rxc,rrho,ruc
+
+    return randq0
 
 
 """
