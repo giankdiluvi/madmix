@@ -249,6 +249,42 @@ def meanfield_gmm_lq(xd,w,mus,Sigmas,alphas,lrs,ms,betas,invWs,nus):
     # end for
     for n in range(N):
         lrsn=lrs[n,:]
-        lq += lrsn[xd_[n,:].astype(int)] # labels
+        lq += lrsn[xd[n,:].astype(int)] # labels
     # end for
     return lq
+
+
+def meanfield_gmm_rq(size,alphas,lrs,ms,betas,invWs,nus):
+    """
+    Compute the log density of the mean field approximation to a GMM
+
+    Inputs:
+        size    : int, sample size
+        alphas  : (K,) array, Dirichlet params
+        lrs     : (N,K) array, labels params
+        ms      : (K,D) array, cluster means location params
+        betas   : (K,) array, cluster means spread params
+        invWs   : (K,D,D) array, cluster covariances scale params
+        nus     : (K,) array, cluster covariances df params
+
+    Outputs:
+        rxd     : (N,size) array, sample labels
+        rw      : (K,size) array, sample weights
+        rmus    : (K,D,size) array, sample cluster means
+        rSigmas : (K,D,D,size) array, sample cluster covariances
+    """
+    N,K = lrs.shape
+    _,D = ms.shape
+
+    # labels via Gumbel-max trick
+    G = np.random.gumbel(size=(N,K,size))
+    rxd = np.argmax(lrs[:,:,None]+G,axis=1)
+
+    # continuous vars
+    rw = stats.dirichlet(alphas).rvs(size) # weights
+    rSigmas = np.zeros((K,D,D,size))
+    for k in range(K): rSigmas[k,...]=np.moveaxis(stats.invwishart(df=nus[k],scale=invWs[k,:,:]).rvs(size),0,2) # covariances
+    chol = np.linalg.cholesky(np.moveaxis(rSigmas,3,1)) #(K,B,D,D)
+    rmus = ms[...,None]+np.moveaxis(np.squeeze(np.matmul(chol,np.random.randn(K,size,D,1))),1,2) # means
+
+    return rxd,rw,rmus,rSigmas
