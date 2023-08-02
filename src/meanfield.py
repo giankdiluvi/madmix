@@ -116,6 +116,8 @@ def flattenlq(lq):
 ########################
 ########################
 """
+
+# main routine
 from scipy.special import digamma as psi
 def meanfieldGMM(y,mu0,sigma0,iterations):
     """
@@ -206,3 +208,47 @@ def meanfieldGMM(y,mu0,sigma0,iterations):
     # end for
 
     return alphas,lrs,ms,betas,invWs,nus
+
+
+
+##################
+##################
+# auxiliary fns  #
+##################
+##################
+
+
+def meanfield_gmm_lq(xd,w,mus,Sigmas,alphas,lrs,ms,betas,invWs,nus):
+    """
+    Compute the log density of the mean field approximation to a GMM
+
+    Inputs:
+        xd     : (N,B) array, labels to evaluate log pmf
+        w      : (K,B) array, weights to evaluate log pdf
+        mus    : (K,D,B) array, means to evaluate log pdf
+        Sigmas : (K,D,D,B) array, covariances to evaluate log pdf
+        alphas : (K,) array, Dirichlet params
+        lrs    : (N,K) array, labels params
+        ms     : (K,D) array, cluster means location params
+        betas  : (K,) array, cluster means spread params
+        invWs  : (K,D,D) array, cluster covariances scale params
+        nus    : (K,) array, cluster covariances df params
+
+    Outputs:
+        lq     : (B,) array, log densities
+    """
+    N,B  = xd.shape
+    K,D,_  = mus.shape
+    chol = np.linalg.cholesky(np.moveaxis(Sigmas,3,1))  #(K,B,D,D)
+
+    lq = stats.dirichlet(alphas).logpdf(w) # weights
+    for k in range(K):
+        std_mu = np.squeeze(np.matmul(chol[k,:,:,:],(mus[k,:,:]-ms[k,:,None]).T[:,:,None]))
+        lq += stats.multivariate_normal(mean=np.zeros(D), cov=np.eye(D)).logpdf(std_mu) # kth mean
+        lq += stats.invwishart(df=nus[k],scale=invWs[k,:,:]).logpdf(Sigmas[k,:,:,:])    # kth covariance
+    # end for
+    for n in range(N):
+        lrsn=lrs[n,:]
+        lq += lrsn[xd_[n,:].astype(int)] # labels
+    # end for
+    return lq
