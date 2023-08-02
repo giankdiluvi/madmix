@@ -218,6 +218,31 @@ def meanfieldGMM(y,mu0,sigma0,iterations):
 ##################
 ##################
 
+def meanfield_gmm_elbo(B,lp,alphas,lrs,ms,betas,invWs,nus,y,mu0,Sigma0):
+    """
+    Estimate ELBO of approximation
+
+    Inputs:
+        B       : int, sample size for Monte Carlo estimation
+        lp      : function, posterior log density (unnormalized)
+        alphas  : (K,) array, Dirichlet params
+        lrs     : (N,K) array, labels params
+        ms      : (K,D) array, cluster means location params
+        betas   : (K,) array, cluster means spread params
+        invWs   : (K,D,D) array, cluster covariances scale params
+        nus     : (K,) array, cluster covariances df params
+        y       : (N,D) array, observations
+        mu0     : (K,D,B) array, prior cluster means
+        Sigma0  : (K,D,D,B) array, prior cluster covariances
+
+    Outputs:
+        e  : float, estimate of the ELBO
+    """
+    rxd,rw,rmus,rSigmas = meanfield_gmm_rq(B,alphas,lrs,ms,betas,invWs,nus)
+    llq = meanfield_gmm_lq(rxd,rw,rmus,rSigmas,alphas,lrs,ms,betas,invWs,nus)
+    llp = lp(rxd,rw,rmus,rSigmas,y,mu0,Sigma0)
+    return np.mean(llq-llp)
+
 
 def meanfield_gmm_lq(xd,w,mus,Sigmas,alphas,lrs,ms,betas,invWs,nus):
     """
@@ -282,7 +307,7 @@ def meanfield_gmm_rq(size,alphas,lrs,ms,betas,invWs,nus):
     rxd = np.argmax(lrs[:,:,None]+G,axis=1)
 
     # continuous vars
-    rw = stats.dirichlet(alphas).rvs(size) # weights
+    rw = stats.dirichlet(alphas).rvs(size).T # weights
     rSigmas = np.zeros((K,D,D,size))
     for k in range(K): rSigmas[k,...]=np.moveaxis(stats.invwishart(df=nus[k],scale=invWs[k,:,:]).rvs(size),0,2) # covariances
     chol = np.linalg.cholesky(np.moveaxis(rSigmas,3,1)) #(K,B,D,D)
