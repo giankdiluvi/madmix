@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as stats
 from aux import *
 from concrete import idx_unflattenBinary, idx_flattenBinary
 
