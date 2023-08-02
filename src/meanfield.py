@@ -238,7 +238,7 @@ def meanfield_gmm_lq(xd,w,mus,Sigmas,alphas,lrs,ms,betas,invWs,nus):
         lq     : (B,) array, log densities
     """
     N,B  = xd.shape
-    K,D,_  = mus.shape
+    K,D,_= mus.shape
     chol = np.linalg.cholesky(np.moveaxis(Sigmas,3,1))  #(K,B,D,D)
 
     lq = stats.dirichlet(alphas).logpdf(w) # weights
