@@ -241,7 +241,7 @@ def meanfield_gmm_elbo(B,lp,alphas,lrs,ms,betas,invWs,nus,y,mu0,Sigma0):
     rxd,rw,rmus,rSigmas = meanfield_gmm_rq(B,alphas,lrs,ms,betas,invWs,nus)
     llq = meanfield_gmm_lq(rxd,rw,rmus,rSigmas,alphas,lrs,ms,betas,invWs,nus)
     llp = lp(rxd,rw,rmus,rSigmas,y,mu0,Sigma0)
-    return np.mean(llq-llp)
+    return -np.mean(llq-llp)
 
 
 def meanfield_gmm_lq(xd,w,mus,Sigmas,alphas,lrs,ms,betas,invWs,nus):
