@@ -83,7 +83,7 @@ def gen_randq0(N,mu0,sigma0,invsigma0):
         # weights, means, and covs separately
         rws=np.random.dirichlet(alpha=np.ones(K),size=size).T
         chol=np.linalg.cholesky(sigma0)[:,None,:,:]
-        rmus=mu0[:,:,None]+np.squeeze(np.matmul(chol,np.random.randn(K,size,D,1)))
+        rmus=np.moveaxis(mu0[:,None,:]+np.squeeze(np.matmul(chol,np.random.randn(K,size,D,1))),1,2)
         #rmus=mu0[:,:,None]+np.sum(np.random.randn(K,D,1,size)*invsigma0[:,:,:,None],axis=2)
         rSigmas=np.zeros((K,D,D,size))
         for k in range(K): rSigmas[k,:,:,:]=np.moveaxis(stats.invwishart(N/K,sigma0[k,:,:]*N/K).rvs(size=size),0,2)
