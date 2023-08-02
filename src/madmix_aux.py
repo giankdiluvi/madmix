@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 import aux
+from ham_mixflows import lap_lm
 
 
 """
