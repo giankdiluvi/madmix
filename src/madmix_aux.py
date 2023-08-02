@@ -10,6 +10,49 @@ GMM approximation specification
 ########################################
 ########################################
 """
+def gen_lq0(N,mu0,sigma0):
+    """
+    Create a log density evaluator q0 in the GMM example
+
+    Inputs:
+        N      : int, sample size
+        mu0    : (K,D) array, cluster means (K = # of clusters, D=dim of data)
+        sigma0 : (K,D,D) array, cluster covariances
+
+    Outputs:
+        lq0       : function, reference sampler
+    """
+    K,D = mu0.shape
+    chol = np.linalg.cholesky(sigma0)
+
+    def lq0(xd,ud,xc,rho,uc):
+        # Inputs:
+        # xd  : (N,B) array, labels
+        # ud  : (N,B) array, discrete unifs
+        # xc  : (Kp,B) array, continuous vars
+        # rho : (Kp,B) array, momenta
+        # uc  : (B,) array, continuous unifs
+        #
+        # Outputs: (B,) array, reference log density
+        B=xd.shape[1]
+
+        ws,mus,Hs=madmix_gmm_unflatten(xc,K,D)
+        ws=ws/np.sum(ws,axis=0)[None,:]
+        Sigmas=HtoSigma(Hs)
+
+        lq  = -N*np.log(K)*np.ones(B) # xd unif ref, ud ref = 0 (uniform[0,1])
+        lq += lap_lm(rho) # momenta, uc ref = 0 (uniform[0,1])
+        lq += stats.dirichlet(np.ones(K)).logpdf(ws) # weights
+        for k in range(K):
+            std_mu = np.squeeze(np.matmul(chol[k,:,:],(mus[k,:,:]-mu0[k,:,None]).T[:,:,None]))
+            lq += stats.invwishart(df=N/K,scale=sigma0[k,:,:]*N/K).logpdf(Sigmas[k,:,:,:]) # kth cov
+            lq += stats.multivariate_normal(mean=np.zeros(D),cov=np.eye(D)).logpdf(std_mu) # kth mean
+        # end for
+
+        return lq
+    return lq0
+
+
 def gen_randq0(N,mu0,sigma0,invsigma0):
     """
     Create a sampler for q0 in the GMM example
