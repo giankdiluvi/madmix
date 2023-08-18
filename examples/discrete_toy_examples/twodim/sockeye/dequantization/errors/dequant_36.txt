@@ -1,0 +1,6 @@
+sed: can't read two_settings_dequant.txt: No such file or directory
+usage: toy_run_dequant.py [-h] [--target {onedim,twodim,mixture}]
+                          [--depth DEPTH] [--width WIDTH] [--lr LR]
+                          [--max_iters MAX_ITERS] [--outpath OUTPATH]
+                          [--idx IDX]
+toy_run_dequant.py: error: argument --depth: expected one argument
