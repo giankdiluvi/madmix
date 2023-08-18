@@ -1,6 +1,19 @@
-sed: can't read two_settings_dequant.txt: No such file or directory
-usage: toy_run_dequant.py [-h] [--target {onedim,twodim,mixture}]
-                          [--depth DEPTH] [--width WIDTH] [--lr LR]
-                          [--max_iters MAX_ITERS] [--outpath OUTPATH]
-                          [--idx IDX]
-toy_run_dequant.py: error: argument --depth: expected one argument
+Traceback (most recent call last):
+  File "../toy_run_dequant.py", line 88, in <module>
+    tmp_flow,tmp_loss=train_dequant_discrete(
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/twodim/../../../src/dequantization.py", line 85, in train_dequant_discrete
+    loss = -flow.log_prob(training_sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/twodim/../../../src/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/multivariate_normal.py", line 214, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (5000, 2)) to be within the support (IndependentConstraint(Real(), 1)) of the distribution MultivariateNormal(loc: torch.Size([2]), covariance_matrix: torch.Size([2, 2])), but found invalid values:
+tensor([[nan, nan],
+        [nan, nan],
+        [nan, nan],
+        ...,
+        [nan, nan],
+        [nan, nan],
+        [nan, nan]], grad_fn=<AddBackward0>)

@@ -1,0 +1,31 @@
+Training a RealNVP normalizing flow with dequantized discrete nodes
+
+Target distribution: mixture
+
+Flow settings:
+Flow depth: 10
+Flow width: 32
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.001
+
+Starting optimization
+iter 0: loss = 102.315
+iter 1000: loss = 1.509
+iter 2000: loss = 1.485
+iter 3000: loss = 1.476
+iter 4000: loss = 1.469
+iter 5000: loss = 1.465
+iter 6000: loss = 1.464
+iter 7000: loss = 1.472
+iter 8000: loss = 1.479
+iter 9000: loss = 1.474
+iter 10000: loss = 1.460
+Done!
+Total training time: 1836.7009712409927 seconds
+
+Cacheing results
+
+Saving results
+Done!
