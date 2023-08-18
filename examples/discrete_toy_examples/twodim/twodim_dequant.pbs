@@ -1,0 +1,28 @@
+
+#!/bin/bash
+
+#PBS -l walltime=12:00:00,select=1:ncpus=18:mem=16gb
+#PBS -J 1-36:1
+#PBS -A st-tdjc-1
+#PBS -N twodim-dequant
+#PBS -m abe
+#PBS -M gian.diluvi@stat.ubc.ca
+#PBS -o /scratch/st-tdjc-1/madmix/toy_examples/twodim/dequantization/output/dequant_^array_index^.txt
+#PBS -e /scratch/st-tdjc-1/madmix/toy_examples/twodim/dequantization/errors/dequant_^array_index^.txt
+################################################################################
+
+module load python/3.8.10
+module load py-argparse/1.4.0
+module load py-pip/21.1.2
+
+cd $PBS_O_WORKDIR
+
+export PYTHONPATH=.
+
+cd /arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/twodim/
+
+params=`sed "${PBS_ARRAY_INDEX}q;d" two_settings_dequant.txt`  # read the settings file in current iteration
+param_array=( $params )                            # save current row of settins in param_array
+
+# run code
+python ../toy_run_dequant.py --target 'twodim' --depth ${param_array[1]} --width ${param_array[2]} --lr ${param_array[3]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/toy_examples/twodim/dequantization/'
