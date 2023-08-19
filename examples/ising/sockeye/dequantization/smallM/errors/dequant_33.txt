@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "ising_run_dequant.py", line 88, in <module>
+    tmp_flow,tmp_loss=train_dequant_discrete(
+  File "/arc/project/st-tdjc-1/madmix/examples/ising/dequantization/../../../src/dequantization.py", line 85, in train_dequant_discrete
+    loss = -flow.log_prob(training_sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/ising/dequantization/../../../src/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/multivariate_normal.py", line 214, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (5000, 5)) to be within the support (IndependentConstraint(Real(), 1)) of the distribution MultivariateNormal(loc: torch.Size([5]), covariance_matrix: torch.Size([5, 5])), but found invalid values:
+tensor([[        nan,         nan,         nan,         nan,         nan],
+        [        nan,         nan,         nan,         nan,         nan],
+        [        nan,         nan,         nan,         nan,         nan],
+        ...,
+        [-4.5538e+37, -7.1475e+36, -1.4236e+38, -3.3582e+37,        -inf],
+        [-2.6727e+37, -4.1950e+36, -8.3556e+37, -1.9710e+37, -2.0633e+38],
+        [-3.0193e+37, -4.7390e+36, -9.4392e+37, -2.2266e+37, -2.3309e+38]],
+       grad_fn=<AddBackward0>)
