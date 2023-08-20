@@ -1,0 +1,31 @@
+Training a RealNVP normalizing flow for an Ising model with dequantized nodes
+
+M: large
+
+Flow settings:
+Flow depth: 10
+Flow width: 128
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 88.421
+iter 1000: loss = 41.839
+iter 2000: loss = 37.417
+iter 3000: loss = 33.470
+iter 4000: loss = 30.899
+iter 5000: loss = 28.554
+iter 6000: loss = 26.040
+iter 7000: loss = 23.587
+iter 8000: loss = 21.407
+iter 9000: loss = 19.601
+iter 10000: loss = 18.154
+Done!
+Total training time: 859.259435644024 seconds
+
+Cacheing results
+
+Saving results
+Done!
