@@ -1,1 +1,45 @@
-python: can't open file 'gmm_run_concrete_penguin.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "gmm_run_dequant_penguin.py", line 97, in <module>
+    tmp_flow,tmp_loss=dequantization.train_dequant_gmm(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/dequantization.py", line 280, in train_dequant_gmm
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/dequantization.py", line 141, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
+tensor([[[ 0.0100,  0.0153,  0.1729,  0.0444],
+         [ 0.0153,  0.2453,  0.0977,  0.0957],
+         [ 0.1729,  0.0977,  4.0049, -0.3544],
+         [ 0.0444,  0.0957, -0.3544,  1.5354]],
+
+        [[ 0.0107,  0.0322,  0.2169,  0.0393],
+         [ 0.0322,  0.1314,  0.5747,  0.1633],
+         [ 0.2169,  0.5747,  4.7549,  0.0537],
+         [ 0.0393,  0.1633,  0.0537,  2.2205]],
+
+        [[ 0.0540,  0.0670,  0.4921,  0.0716],
+         [ 0.0670,  0.5671,  0.1111,  0.0880],
+         [ 0.4921,  0.1111,  7.4411, -1.1479],
+         [ 0.0716,  0.0880, -1.1479,  1.4223]],
+
+        ...,
+
+        [[ 0.0351,  0.0379,  0.4064,  0.1290],
+         [ 0.0379,  0.0984,  0.3969,  0.1842],
+         [ 0.4064,  0.3969,  5.5946,  1.0996],
+         [ 0.1290,  0.1842,  1.0996,  0.6601]],
+
+        [[ 0.0398,  0.0175,  0.5213,  0.1366],
+         [ 0.0175,  0.1121,  0.1259,  0.0567],
+         [ 0.5213,  0.1259,  7.6016,  1.1927],
+         [ 0.1366,  0.0567,  1.1927,  1.0147]],
+
+        [[ 0.0725,  0.0608,  0.7308,  0.0938],
+         [ 0.0608,  0.3525,  0.3835,  0.2709],
+         [ 0.7308,  0.3835,  8.0342,  0.0803],
+         [ 0.0938,  0.2709,  0.0803,  1.2844]]], grad_fn=<PermuteBackward0>)

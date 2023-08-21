@@ -1,0 +1,33 @@
+Training a RealNVP normalizing flow with dequantized label indices for a GMM with the Palmer penguin data set
+
+Mixture settings:
+Mixture size K: 3
+Number of observations N: 333
+Prior precision tau0: 0.1
+
+Flow settings:
+Flow depth: 10
+Flow width: 64
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 4341.478
+iter 1000: loss = 377.137
+iter 2000: loss = 71.396
+iter 3000: loss = 25.381
+iter 4000: loss = 9.527
+iter 5000: loss = -0.191
+iter 6000: loss = -8.551
+iter 7000: loss = -16.671
+iter 8000: loss = -24.855
+iter 9000: loss = -32.894
+iter 10000: loss = -40.599
+Done!
+Total training time: 1169.944663001923 seconds
+
+Cacheing results
+
+Saving results

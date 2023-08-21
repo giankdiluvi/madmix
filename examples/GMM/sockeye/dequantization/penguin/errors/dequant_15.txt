@@ -1,1 +1,46 @@
-python: can't open file 'gmm_run_concrete_penguin.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "gmm_run_dequant_penguin.py", line 97, in <module>
+    tmp_flow,tmp_loss=dequantization.train_dequant_gmm(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/dequantization.py", line 280, in train_dequant_gmm
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/dequantization.py", line 141, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
+tensor([[[ 1.1323e-01,  1.1777e-01,  4.7068e-01,  1.6984e-01],
+         [ 1.1777e-01,  2.2148e-01,  3.2798e-01,  2.5371e-01],
+         [ 4.7068e-01,  3.2798e-01,  4.5742e+00, -8.6458e-01],
+         [ 1.6984e-01,  2.5371e-01, -8.6458e-01,  1.2017e+00]],
+
+        [[ 1.2351e-02,  1.4649e-02,  2.2236e-01,  5.4295e-02],
+         [ 1.4649e-02,  1.0408e-01,  1.7315e-01,  1.5436e-01],
+         [ 2.2236e-01,  1.7315e-01,  4.2433e+00,  5.3572e-01],
+         [ 5.4295e-02,  1.5436e-01,  5.3572e-01,  1.1637e+00]],
+
+        [[ 1.0679e-02,  3.0087e-02,  2.8473e-01,  6.1719e-02],
+         [ 3.0087e-02,  3.0565e-01,  5.3449e-01,  2.3543e-01],
+         [ 2.8473e-01,  5.3449e-01,  1.3703e+01, -1.8995e+00],
+         [ 6.1719e-02,  2.3543e-01, -1.8995e+00,  2.4555e+00]],
+
+        ...,
+
+        [[ 1.7043e-03,  8.7133e-03,  8.2705e-02,  1.4804e-02],
+         [ 8.7133e-03,  2.2400e-01,  2.0035e-01, -1.1392e-01],
+         [ 8.2705e-02,  2.0035e-01,  1.1995e+01, -9.9743e-01],
+         [ 1.4804e-02, -1.1392e-01, -9.9743e-01,  8.2283e-01]],
+
+        [[ 6.1395e-03,  2.2697e-02,  2.4896e-01,  2.8412e-02],
+         [ 2.2697e-02,  2.3931e-01,  7.6132e-01,  1.6264e-01],
+         [ 2.4896e-01,  7.6132e-01,  2.0269e+01, -4.1201e+00],
+         [ 2.8412e-02,  1.6264e-01, -4.1201e+00,  2.8677e+00]],
+
+        [[ 3.6676e-02,  5.2018e-02,  3.6465e-01,  4.8917e-02],
+         [ 5.2018e-02,  1.9199e-01,  3.9214e-01,  1.3863e-01],
+         [ 3.6465e-01,  3.9214e-01,  3.9884e+00,  1.7089e-02],
+         [ 4.8917e-02,  1.3863e-01,  1.7089e-02,  7.8590e-01]]],
+       grad_fn=<PermuteBackward0>)

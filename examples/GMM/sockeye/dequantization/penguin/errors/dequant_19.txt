@@ -1,0 +1,45 @@
+Traceback (most recent call last):
+  File "gmm_run_dequant_penguin.py", line 97, in <module>
+    tmp_flow,tmp_loss=dequantization.train_dequant_gmm(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/dequantization.py", line 280, in train_dequant_gmm
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/penguin/dequantization.py", line 141, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
+tensor([[[ 0.0593, -0.2784,  0.6238,  0.2994],
+         [-0.2784,  1.9015, -1.2572, -0.6355],
+         [ 0.6238, -1.2572, 11.2799,  5.3219],
+         [ 0.2994, -0.6355,  5.3219,  2.5146]],
+
+        [[ 0.1539, -0.4165,  0.9546,  0.4362],
+         [-0.4165,  1.4575, -0.8220, -0.8993],
+         [ 0.9546, -0.8220, 15.3316,  4.2021],
+         [ 0.4362, -0.8993,  4.2021,  1.4923]],
+
+        [[ 0.0601, -0.2175,  0.7766,  0.3352],
+         [-0.2175,  1.1962, -1.4523, -0.7009],
+         [ 0.7766, -1.4523, 14.5783,  6.0411],
+         [ 0.3352, -0.7009,  6.0411,  2.5166]],
+
+        ...,
+
+        [[ 0.0900, -0.2614,  0.7743,  0.3031],
+         [-0.2614,  1.0015, -1.1599, -0.3982],
+         [ 0.7743, -1.1599, 11.5520,  4.7722],
+         [ 0.3031, -0.3982,  4.7722,  1.9795]],
+
+        [[ 0.1534, -0.4556,  0.9230,  0.4072],
+         [-0.4556,  1.6476, -1.5267, -0.7785],
+         [ 0.9230, -1.5267, 10.5626,  4.2256],
+         [ 0.4072, -0.7785,  4.2256,  1.7130]],
+
+        [[ 0.2102, -0.4394,  1.3459,  0.6312],
+         [-0.4394,  1.5470, -0.7796, -1.0313],
+         [ 1.3459, -0.7796, 15.2055,  4.9775],
+         [ 0.6312, -1.0313,  4.9775,  2.0300]]], grad_fn=<PermuteBackward0>)
