@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "gmm_run_dequant_waveform.py", line 114, in <module>
+    flows     = pkl_load(outpath+'gmm_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/waveform/aux.py", line 40, in pkl_load
+    with open(file+'.pkl', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/st-tdjc-1/madmix/gmm/dequantization/waveform/gmm_flows.pkl'
