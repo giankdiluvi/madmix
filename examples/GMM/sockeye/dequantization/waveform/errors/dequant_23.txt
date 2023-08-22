@@ -12,22 +12,22 @@ Traceback (most recent call last):
   File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
     raise ValueError(
 ValueError: Expected value argument (Tensor of shape (1000, 2, 2)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([2, 2]), df: 100.0), but found invalid values:
-tensor([[[1.2420e+22, 7.2775e+10],
-         [7.2775e+10, 5.2291e+02]],
+tensor([[[1.7912e+37, 2.2646e+18],
+         [2.2646e+18, 8.4823e+03]],
 
-        [[6.6008e+28, 1.4109e+14],
-         [1.4109e+14, 7.5185e+02]],
+        [[1.9835e+25, 2.5448e+12],
+         [2.5448e+12, 1.7187e+03]],
 
-        [[9.2978e+23, 1.5180e+11],
-         [1.5180e+11, 1.2566e+03]],
+        [[8.7608e+23, 2.9956e+11],
+         [2.9956e+11, 1.7217e+04]],
 
         ...,
 
-        [[2.0774e+20, 1.1349e+10],
-         [1.1349e+10, 3.5388e+02]],
+        [[2.7870e+23, 4.8035e+11],
+         [4.8035e+11, 4.7877e+03]],
 
-        [[6.2013e+18, 2.5099e+09],
-         [2.5099e+09, 3.0219e+02]],
+        [[       inf, 5.0970e+20],
+         [5.0970e+20, 8.3366e+02]],
 
-        [[7.4072e+12, 3.0924e+06],
-         [3.0924e+06, 1.6536e+03]]], grad_fn=<PermuteBackward0>)
+        [[1.1289e+21, 2.0289e+10],
+         [2.0289e+10, 1.9669e+03]]], grad_fn=<PermuteBackward0>)

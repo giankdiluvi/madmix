@@ -12,35 +12,35 @@ Traceback (most recent call last):
   File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
     raise ValueError(
 ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
-tensor([[[ 0.0000e+00,  0.0000e+00,         nan,  0.0000e+00],
-         [ 0.0000e+00,  2.0530e+17,         nan,  2.0358e+12],
-         [        nan,         nan,         inf,         inf],
-         [ 0.0000e+00,  2.0358e+12,         inf,  2.0189e+07]],
+tensor([[[        inf,         inf,         nan,         inf],
+         [        inf,  7.7440e+23,         nan,  1.2358e+14],
+         [        nan,         nan,         inf,        -inf],
+         [        inf,  1.2358e+14,        -inf,  3.0381e+06]],
 
-        [[ 0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00],
-         [ 0.0000e+00,         inf,  2.5190e+34,  4.9228e+34],
-         [ 0.0000e+00,  2.5190e+34,  1.6120e+22, -1.3588e+11],
-         [ 0.0000e+00,  4.9228e+34, -1.3588e+11,  3.6242e+03]],
+        [[ 1.7032e-29,         nan, -9.9247e-15,  3.7204e-14],
+         [        nan,         inf,         inf,         inf],
+         [-9.9247e-15,         inf,  8.0046e+19, -3.3449e+10],
+         [ 3.7204e-14,         inf, -3.3449e+10,  5.1295e+03]],
 
         [[ 0.0000e+00,         nan,  0.0000e+00,  0.0000e+00],
          [        nan,         inf,         inf,         inf],
-         [ 0.0000e+00,         inf,  4.4998e+02,  7.6931e+02],
-         [ 0.0000e+00,         inf,  7.6931e+02,  3.0124e+03]],
+         [ 0.0000e+00,         inf,  1.9786e+04,  3.9941e+03],
+         [ 0.0000e+00,         inf,  3.9941e+03,  1.2546e+05]],
 
         ...,
 
-        [[ 0.0000e+00,  0.0000e+00,         nan,  0.0000e+00],
-         [ 0.0000e+00,  2.1948e+36,         nan,  7.8863e+19],
-         [        nan,         nan,         inf,        -inf],
-         [ 0.0000e+00,  7.8863e+19,        -inf,  1.3086e+05]],
+        [[ 0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00],
+         [ 0.0000e+00,         inf,  6.5556e+29,  4.5804e+29],
+         [ 0.0000e+00,  6.5556e+29,  1.1494e+06, -2.5756e+05],
+         [ 0.0000e+00,  4.5804e+29, -2.5756e+05,  5.8870e+04]],
 
         [[ 0.0000e+00,         nan,         nan,  0.0000e+00],
          [        nan,         inf,         nan,         inf],
-         [        nan,         nan,         inf,        -inf],
-         [ 0.0000e+00,         inf,        -inf,  8.0443e+06]],
+         [        nan,         nan,         inf,         inf],
+         [ 0.0000e+00,         inf,         inf,  5.8177e+04]],
 
-        [[ 0.0000e+00,  0.0000e+00,  0.0000e+00,  0.0000e+00],
-         [ 0.0000e+00,  3.1422e+08,  2.2220e+04,  1.5594e+05],
-         [ 0.0000e+00,  2.2220e+04,  7.4208e+04, -4.2377e+03],
-         [ 0.0000e+00,  1.5594e+05, -4.2377e+03,  2.2515e+03]]],
+        [[ 0.0000e+00,         nan,         nan,  0.0000e+00],
+         [        nan,         inf,         nan,        -inf],
+         [        nan,         nan,         inf,        -inf],
+         [ 0.0000e+00,        -inf,        -inf,  4.5811e+05]]],
        grad_fn=<PermuteBackward0>)

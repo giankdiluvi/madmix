@@ -1,6 +1,33 @@
 Traceback (most recent call last):
-  File "gmm_run_dequant_waveform.py", line 114, in <module>
-    flows     = pkl_load(outpath+'gmm_flows')
-  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/waveform/aux.py", line 40, in pkl_load
-    with open(file+'.pkl', 'rb') as f:
-FileNotFoundError: [Errno 2] No such file or directory: '/scratch/st-tdjc-1/madmix/gmm/dequantization/waveform/gmm_flows.pkl'
+  File "gmm_run_dequant_waveform.py", line 97, in <module>
+    tmp_flow,tmp_loss=dequantization.train_dequant_gmm(
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/waveform/dequantization.py", line 280, in train_dequant_gmm
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/waveform/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/dequantization/waveform/dequantization.py", line 141, in log_prob
+    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (1000, 2, 2)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([2, 2]), df: 100.0), but found invalid values:
+tensor([[[       inf, 2.2821e+30],
+         [2.2821e+30, 3.2747e+04]],
+
+        [[       inf, 2.6821e+21],
+         [2.6821e+21, 1.6153e+04]],
+
+        [[       inf, 5.3455e+24],
+         [5.3455e+24, 2.2151e+04]],
+
+        ...,
+
+        [[1.5998e+34, 1.4432e+19],
+         [1.4432e+19, 1.3019e+04]],
+
+        [[       inf, 8.5883e+21],
+         [8.5883e+21, 1.6729e+04]],
+
+        [[       inf, 1.0466e+22],
+         [1.0466e+22, 1.7702e+04]]], grad_fn=<PermuteBackward0>)
