@@ -13,21 +13,21 @@ Traceback (most recent call last):
     raise ValueError(
 ValueError: Expected value argument (Tensor of shape (1000, 2, 2)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([2, 2]), df: 100.0), but found invalid values:
 tensor([[[ 0.0000e+00,  0.0000e+00],
-         [ 0.0000e+00,  1.9049e+02]],
+         [ 0.0000e+00,  5.9197e+02]],
 
-        [[ 6.8651e-41, -5.0660e-21],
-         [-5.0660e-21,  3.7384e-01]],
+        [[ 0.0000e+00, -3.6358e-41],
+         [-3.6358e-41,  1.1686e+03]],
 
         [[ 0.0000e+00,  0.0000e+00],
-         [ 0.0000e+00,  8.1947e+01]],
+         [ 0.0000e+00,  2.4314e+02]],
 
         ...,
 
-        [[ 6.1673e-14, -1.5514e-07],
-         [-1.5514e-07,  3.9026e-01]],
+        [[ 0.0000e+00, -4.9098e-28],
+         [-4.9098e-28,  2.4048e+01]],
 
-        [[ 0.0000e+00,  0.0000e+00],
-         [ 0.0000e+00,  5.5776e+01]],
+        [[ 8.2090e-24, -1.1048e-11],
+         [-1.1048e-11,  1.4870e+01]],
 
-        [[ 7.2842e-24, -6.4636e-12],
-         [-6.4636e-12,  5.7354e+00]]], grad_fn=<PermuteBackward0>)
+        [[ 0.0000e+00, -2.4827e-22],
+         [-2.4827e-22,  7.3040e+02]]], grad_fn=<PermuteBackward0>)

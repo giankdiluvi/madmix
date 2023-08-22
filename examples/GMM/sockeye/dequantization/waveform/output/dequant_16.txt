@@ -14,20 +14,21 @@ Max number of iters: 10001
 Learning rate: 1e-05
 
 Starting optimization
-iter 0: loss = 7772.158
-iter 1000: loss = 424.976
-iter 2000: loss = 242.333
-iter 3000: loss = 181.602
-iter 4000: loss = 151.312
-iter 5000: loss = 127.365
-iter 6000: loss = 102.608
-iter 7000: loss = 78.221
-iter 8000: loss = 57.549
-iter 9000: loss = 40.250
-iter 10000: loss = 25.705
+iter 0: loss = 11266.054
+iter 1000: loss = 471.086
+iter 2000: loss = 288.312
+iter 3000: loss = 207.557
+iter 4000: loss = 171.623
+iter 5000: loss = 147.167
+iter 6000: loss = 125.262
+iter 7000: loss = 102.056
+iter 8000: loss = 79.447
+iter 9000: loss = 60.820
+iter 10000: loss = 46.806
 Done!
-Total training time: 2705.5930777909234 seconds
+Total training time: 3438.3095040969783 seconds
 
 Cacheing results
 
 Saving results
+Done!

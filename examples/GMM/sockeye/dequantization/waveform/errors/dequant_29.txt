@@ -15,11 +15,11 @@ ValueError: Expected value argument (Tensor of shape (1000, 2, 2)) to be within 
 tensor([[[       inf,        nan],
          [       nan,        inf]],
 
-        [[0.0000e+00,        nan],
+        [[       inf,        nan],
          [       nan,        inf]],
 
-        [[1.5781e+15,        nan],
-         [       nan,        inf]],
+        [[2.5785e-04, 1.2837e+00],
+         [1.2837e+00,        inf]],
 
         ...,
 
@@ -29,5 +29,5 @@ tensor([[[       inf,        nan],
         [[       inf,        nan],
          [       nan,        inf]],
 
-        [[3.1334e-01,        nan],
+        [[       inf,        nan],
          [       nan,        inf]]], grad_fn=<PermuteBackward0>)
