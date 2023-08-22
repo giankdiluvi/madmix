@@ -1,0 +1,34 @@
+Training a RealNVP normalizing flow with dequantized label indices for a GMM with the waveform data set
+
+Mixture settings:
+Mixture size K: 3
+Number of observations N: 300
+Prior precision tau0: 0.1
+
+Flow settings:
+Flow depth: 50
+Flow width: 256
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 2236.178
+iter 1000: loss = 114.163
+iter 2000: loss = 45.756
+iter 3000: loss = 9.068
+iter 4000: loss = -27.264
+iter 5000: loss = -0.315
+iter 6000: loss = -82.113
+iter 7000: loss = -100.019
+iter 8000: loss = -118.407
+iter 9000: loss = -54.049
+iter 10000: loss = -149.018
+Done!
+Total training time: 5151.300822359975 seconds
+
+Cacheing results
+
+Saving results
+Done!
