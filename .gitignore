@@ -29,8 +29,9 @@ Manifest.toml
 # no data files
 /ipynb/dat/*
 
-# no misc files
+# no misc or old files
 misc/*
+old/*
 
 # ignore deprecated code
 */gibbs_deprecated.py
