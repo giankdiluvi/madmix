@@ -1,0 +1,34 @@
+Training a RealNVP normalizing flow with a Concrete relaxation for a GMM with the Palmer penguin data set
+
+Mixture settings:
+Mixture size K: 3
+Number of observations N: 333
+Prior precision tau0: 0.1
+
+Flow settings:
+Relaxation temperature: 0.5
+Flow depth: 64
+Flow width: 100
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 1188478654087168.000
+iter 1000: loss = 144893154426880.000
+iter 2000: loss = 279879245365248.000
+iter 3000: loss = 181529393233920.000
+iter 4000: loss = 37748543062016.000
+iter 5000: loss = 63774878859264.000
+iter 6000: loss = 38871261773824.000
+iter 7000: loss = 34179211329536.000
+iter 8000: loss = 48080820895744.000
+iter 9000: loss = 19755832442880.000
+iter 10000: loss = 14086625558528.000
+Done!
+Total training time: 8536.664284712053 seconds
+
+Cacheing results
+
+Saving results

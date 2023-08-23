@@ -1,0 +1,2 @@
+/cm/local/apps/openpbs/var/spool/mom_priv/jobs/5319786[143].pbsha.ib.sockeye.SC: line 37: 242732 Killed                  python gmm_run_concrete_penguin.py --temp ${param_array[1]} --depth ${param_array[2]} --width ${param_array[3]} --lr ${param_array[4]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/gmm/penguin/'
+Cgroup mem limit exceeded: Task in /pbspro.service/jobid/5319786[143].pbsha.ib.sockeye killed as a result of limit of /pbspro.service/jobid/5319786[143].pbsha.ib.sockeye

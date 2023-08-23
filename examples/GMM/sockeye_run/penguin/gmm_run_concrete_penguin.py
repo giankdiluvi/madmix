@@ -120,9 +120,9 @@ print()
 
 print('Saving results')
 # load files
-flows     = pkl_load(outpath+'gmm_flows_dequant')
-losses    = pkl_load(outpath+'gmm_losses_dequant')
-cpu_times = pkl_load(outpath+'gmm_cpu_times_dequant')
+flows     = pkl_load(outpath+'gmm_flows')
+losses    = pkl_load(outpath+'gmm_losses')
+cpu_times = pkl_load(outpath+'gmm_cpu_times')
 
 # update files
 flows[idx]     = tmp_flow
@@ -130,7 +130,7 @@ losses[idx,:]  = tmp_loss
 cpu_times[idx] = cpu_time
 
 # save updated files
-pkl_save(flows, outpath+'gmm_flows_dequant')
-pkl_save(losses, outpath+'gmm_losses_dequant')
-pkl_save(cpu_times, outpath+'gmm_cpu_times_dequant')
+pkl_save(flows, outpath+'gmm_flows')
+pkl_save(losses, outpath+'gmm_losses')
+pkl_save(cpu_times, outpath+'gmm_cpu_times')
 print('Done!')
