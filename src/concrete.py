@@ -535,7 +535,7 @@ class GMMRef(Distribution):
         tau0 : float, means prior precision
         temp : float, temperature of Concrete relaxation
     """
-    def __init__(self, N,K,D,tau0=1.,temp=1.):
+    def __init__(self, N,K,D,tau0=1.,temp=1.,norm_ref=True):
         self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(K)/K)
         self.dirichlet = torch.distributions.dirichlet.Dirichlet(concentration=torch.ones(K))
         self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(D), torch.eye(D)/np.sqrt(tau0))
@@ -543,42 +543,52 @@ class GMMRef(Distribution):
         self.K = K
         self.N = N
         self.D = D
+        self.norm_ref = norm_ref
+        self.dim = int(self.K*self.N+self.K+self.K*self.D+self.K*(self.D+self.D*(self.D-1)/2))
+        self.big_gauss = torch.distributions.MultivariateNormal(torch.zeros(self.dim), torch.eye(self.dim))
 
     def log_prob(self, value):
         relcat_lp = torch.zeros(value.shape[0])
         for n in range(self.N): relcat_lp += self.relcat.log_prob(value[...,n*self.K+torch.arange(0,self.K)])
 
-        idx=np.diag_indices(self.D)
-        xc=value[...,self.N*self.K:].T
-        ws,mus,Hs=concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B)
-        Sigmas=HtoSigma(Hs) #(K,D,D,B)
-        xc_lp = torch.zeros(ws.shape[1])
-        #xc_lp=self.dirichlet.log_prob(project_simplex_2d(ws.T)) # this is just 0 since ref is uniform
-        for k in range(self.K):
-            xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
-            xc_lp += self.D*torch.log(torch.tensor([2])) + torch.sum((self.D-torch.arange(self.D)+1)[:,None]*Hs[k,idx[0],idx[1],:],axis=0) # determinant Jacobian of log-Cholesky decomposition
-            xc_lp += self.gauss.log_prob(mus[k,...].T)
-        # end for
+        if self.norm_ref:
+            xc_lp =self.big_gauss.log_prob(value)
+        else:
+            idx=np.diag_indices(self.D)
+            xc=value[...,self.N*self.K:].T
+            ws,mus,Hs=concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B)
+            Sigmas=HtoSigma(Hs) #(K,D,D,B)
+            xc_lp = torch.zeros(ws.shape[1])
+            for k in range(self.K):
+                xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+                xc_lp += self.D*torch.log(torch.tensor([2])) + torch.sum((self.D-torch.arange(self.D)+1)[:,None]*Hs[k,idx[0],idx[1],:],axis=0) # determinant Jacobian of log-Cholesky decomposition
+                xc_lp += self.gauss.log_prob(mus[k,...].T)
+            # end for
+        # end if
         return relcat_lp+xc_lp
 
     def sample(self,sample_shape=torch.Size()):
         relcat_sample=self.relcat.sample(sample_shape)
         for n in range(self.N-1): relcat_sample = torch.hstack((relcat_sample,self.relcat.sample(sample_shape)))
 
-        ws_sample = self.dirichlet.sample(sample_shape).T
-        sigmas_sample = torch.zeros((self.K,self.D,self.D,sample_shape[0]))
-        mus_sample = torch.zeros((self.K,self.D,sample_shape[0]))
-        for k in range(self.K-1):
-            sigmas_sample[k,...] = torch.moveaxis(self.invwis.sample(sample_shape),0,2)
-            mus_sample[k,...] = self.gauss.sample(sample_shape).T
-        # end for
-        xc_sample = concrete_gmm_flatten(ws_sample,mus_sample,sigmas_sample).T
+        if self.norm_ref:
+            xc_sample = torch.randn(sample_shape[0],self.dim)
+        else:
+            ws_sample = self.dirichlet.sample(sample_shape).T
+            sigmas_sample = torch.zeros((self.K,self.D,self.D,sample_shape[0]))
+            mus_sample = torch.zeros((self.K,self.D,sample_shape[0]))
+            for k in range(self.K-1):
+                sigmas_sample[k,...] = torch.moveaxis(self.invwis.sample(sample_shape),0,2)
+                mus_sample[k,...] = self.gauss.sample(sample_shape).T
+                # end for
+            xc_sample = concrete_gmm_flatten(ws_sample,mus_sample,sigmas_sample).T
+        # end if
         return torch.hstack((relcat_sample,xc_sample))
 #========================================
 
 
 
-def gmm_concrete_sample(pred_x,pred_w,pred_mus,pred_sigmas,temp):
+def gmm_concrete_sample(pred_x,pred_w,pred_mus,pred_sigmas,temp,norm_ref=True):
     """
     Generate sample for learning GMM with RealNVP
     using a Concrete relaxation for the labels
@@ -606,8 +616,15 @@ def gmm_concrete_sample(pred_x,pred_w,pred_mus,pred_sigmas,temp):
     conc_sample=conc_sample.reshape(pred_x.shape[-1],x_prbs.shape[0]*x_prbs.shape[1])
 
     # deal with continuous variables
-    Hs=SigmatoH(torch.moveaxis(pred_sigmas,0,3))
-    xc=concrete_gmm_flatten(pred_w.T,torch.moveaxis(pred_mus,0,2),Hs).T
+    if norm_ref:
+        N = pred_x.shape[-1]
+        B,K,D = pred_mus.shape
+        dim = int(K+K*D+K*(D+D*(D-1)/2))
+        xc = torch.randn(B,dim)
+    else:
+        Hs=SigmatoH(torch.moveaxis(pred_sigmas,0,3))
+        xc=concrete_gmm_flatten(pred_w.T,torch.moveaxis(pred_mus,0,2),Hs).T
+    # end if
 
     # merge everything
     conc_sample=torch.hstack((conc_sample,xc)).float()
@@ -616,7 +633,7 @@ def gmm_concrete_sample(pred_x,pred_w,pred_mus,pred_sigmas,temp):
 #========================================
 
 
-def createGMMRealNVP(temp,depth,N,K,D,tau0,width=32):
+def createGMMRealNVP(temp,depth,N,K,D,tau0,width=32,norm_ref=True):
     """
     Wrapper to init a RealNVP class for a GMM problem
 
@@ -645,7 +662,7 @@ def createGMMRealNVP(temp,depth,N,K,D,tau0,width=32):
     masks=masks.repeat(depth//2,1)
 
     # define reference distribution
-    ref = GMMRef(N,K,D,tau0,temp)
+    ref = GMMRef(N,K,D,tau0,temp,norm_ref)
 
     # define scale and translation architectures
     net_s = lambda: nn.Sequential(
@@ -667,7 +684,7 @@ def createGMMRealNVP(temp,depth,N,K,D,tau0,width=32):
 #========================================
 
 
-def trainGMMRealNVP(temp,depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+def trainGMMRealNVP(temp,depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4,norm_ref=True,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
 
@@ -694,7 +711,7 @@ def trainGMMRealNVP(temp,depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4
     torch.manual_seed(seed)
 
     # create flow
-    flow=createGMMRealNVP(temp,depth,N,K,D,tau0,width)
+    flow=createGMMRealNVP(temp,depth,N,K,D,tau0,width,norm_ref)
 
     # train flow
     optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
