@@ -119,7 +119,7 @@ class GMMRef_dequant(Distribution):
         K    : int, mixture size
         tau0 : float, labels and means prior precision
     """
-    def __init__(self, N,K,D,tau0=1.):
+    def __init__(self, N,K,D,tau0=1.,norm_ref=True):
         self.dirichlet = torch.distributions.dirichlet.Dirichlet(concentration=torch.ones(K))
         self.gauss  = torch.distributions.MultivariateNormal(torch.zeros(D), torch.eye(D)/np.sqrt(tau0))
         self.std_gauss = torch.distributions.normal.Normal(torch.tensor([0.0]), torch.tensor([1.0]))
@@ -127,41 +127,50 @@ class GMMRef_dequant(Distribution):
         self.K = K
         self.N = N
         self.D = D
+        self.norm_ref = norm_ref
 
     def log_prob(self, value):
-        relcat_lp = torch.zeros(value.shape[0])
-        for n in range(self.N): relcat_lp += self.std_gauss.log_prob(value[...,n])
+        if self.norm_ref:
+            dim=value.shape[1]
+            return torch.distributions.MultivariateNormal(torch.zeros(dim), torch.eye(dim)).log_prob(value)
 
-        idx=np.diag_indices(self.D)
-        xc=value[...,self.N:].T
-        ws,mus,Hs=concrete.concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B)
-        Sigmas=concrete.HtoSigma(Hs) #(K,D,D,B)
-        xc_lp = torch.zeros(ws.shape[1])
-        for k in range(self.K):
-            xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
-            xc_lp += self.D*torch.log(torch.tensor([2])) + torch.sum((self.D-torch.arange(self.D)+1)[:,None]*Hs[k,idx[0],idx[1],:],axis=0) # determinant Jacobian of log-Cholesky decomposition
-            xc_lp += self.gauss.log_prob(mus[k,...].T)
-        # end for
-        return relcat_lp+xc_lp
+        if not self.norm_ref:
+            relcat_lp = torch.zeros(value.shape[0])
+            for n in range(self.N): relcat_lp += self.std_gauss.log_prob(value[...,n])
+
+            idx=np.diag_indices(self.D)
+            xc=value[...,self.N:].T
+            ws,mus,Hs=concrete.concrete_gmm_unflatten(xc,self.K,self.D) #(K,B),(K,D,B),(K,D,D,B)
+            Sigmas=concrete.HtoSigma(Hs) #(K,D,D,B)
+            xc_lp = torch.zeros(ws.shape[1])
+            for k in range(self.K):
+                xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
+                xc_lp += self.D*torch.log(torch.tensor([2])) + torch.sum((self.D-torch.arange(self.D)+1)[:,None]*Hs[k,idx[0],idx[1],:],axis=0) # determinant Jacobian of log-Cholesky decomposition
+                xc_lp += self.gauss.log_prob(mus[k,...].T)
+            # end for
+            return relcat_lp+xc_lp
 
     def sample(self,sample_shape=torch.Size()):
-        labels_sample=self.std_gauss.sample(sample_shape)
-        for n in range(self.N-1): labels_sample = torch.hstack((labels_sample,self.std_gauss.sample(sample_shape)))
+        if self.norm_ref: return torch.randn(sample_shape[0],int(self.N+self.K+self.K*self.D+self.K*(self.D+self.D*(self.D-1)/2)))
 
-        ws_sample = self.dirichlet.sample(sample_shape).T
-        sigmas_sample = torch.zeros((self.K,self.D,self.D,sample_shape[0]))
-        mus_sample = torch.zeros((self.K,self.D,sample_shape[0]))
-        for k in range(self.K):
-            sigmas_sample[k,...] = torch.moveaxis(self.invwis.sample(sample_shape),0,2)
-            mus_sample[k,...] = self.gauss.sample(sample_shape).T
-        # end for
-        Hs_sample = concrete.SigmatoH(sigmas_sample)
-        xc_sample = concrete.concrete_gmm_flatten(ws_sample,mus_sample,Hs_sample).T
-        return torch.hstack((labels_sample,xc_sample))
+        if not self.norm_ref:
+            labels_sample=self.std_gauss.sample(sample_shape)
+            for n in range(self.N-1): labels_sample = torch.hstack((labels_sample,self.std_gauss.sample(sample_shape)))
+
+            ws_sample = self.dirichlet.sample(sample_shape).T
+            sigmas_sample = torch.zeros((self.K,self.D,self.D,sample_shape[0]))
+            mus_sample = torch.zeros((self.K,self.D,sample_shape[0]))
+            for k in range(self.K):
+                sigmas_sample[k,...] = torch.moveaxis(self.invwis.sample(sample_shape),0,2)
+                mus_sample[k,...] = self.gauss.sample(sample_shape).T
+            # end for
+            Hs_sample = concrete.SigmatoH(sigmas_sample)
+            xc_sample = concrete.concrete_gmm_flatten(ws_sample,mus_sample,Hs_sample).T
+            return torch.hstack((labels_sample,xc_sample))
 #========================================
 
 
-def create_dequant_gmm_RealNVP(depth,width,N,K,D,tau0):
+def create_dequant_gmm_RealNVP(depth,width,N,K,D,tau0,norm_ref):
     """
     Wrapper to init a RealNVP flow for a dequantization problem
     with dimension dim that consists of depth layers
@@ -188,7 +197,7 @@ def create_dequant_gmm_RealNVP(depth,width,N,K,D,tau0):
     masks=masks.repeat(depth//2,1)
 
     # define reference distribution
-    ref = GMMRef_dequant(N,K,D,tau0)
+    ref = GMMRef_dequant(N,K,D,tau0,norm_ref)
 
     # define scale and translation architectures
     net_s = lambda: nn.Sequential(
@@ -244,7 +253,7 @@ def gmm_dequant_sample(pred_x,pred_w,pred_mus,pred_sigmas):
     return dequant_sample
 
 
-def train_dequant_gmm(depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+def train_dequant_gmm(depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4,norm_ref=True,seed=0,verbose=True):
     """
     Train a RealNVP normalizing flow targeting a GMM with dequantized cluster labels
 
@@ -270,7 +279,7 @@ def train_dequant_gmm(depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4,se
     torch.manual_seed(seed)
 
     # create flow
-    flow=create_dequant_gmm_RealNVP(depth,width,N,K,D,tau0)
+    flow=create_dequant_gmm_RealNVP(depth,width,N,K,D,tau0,norm_ref)
 
     # train flow
     optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
