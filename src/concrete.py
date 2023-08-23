@@ -106,7 +106,7 @@ def concrete_gmm_flatten(ws,mus,Hs):
 
 def concrete_gmm_unflatten(xc,K,D):
     """
-    Unflatten xc into weights, meand, and covariances
+    Unflatten xc into weights, mean, and covariances
 
     Inputs:
         xc  : (K',B) array, flattened values
@@ -544,7 +544,7 @@ class GMMRef(Distribution):
         self.N = N
         self.D = D
         self.norm_ref = norm_ref
-        self.dim = int(self.K*self.N+self.K+self.K*self.D+self.K*(self.D+self.D*(self.D-1)/2))
+        self.dim = int(self.K+self.K*self.D+self.K*(self.D+self.D*(self.D-1)/2))
         self.big_gauss = torch.distributions.MultivariateNormal(torch.zeros(self.dim), torch.eye(self.dim))
 
     def log_prob(self, value):
@@ -552,7 +552,7 @@ class GMMRef(Distribution):
         for n in range(self.N): relcat_lp += self.relcat.log_prob(value[...,n*self.K+torch.arange(0,self.K)])
 
         if self.norm_ref:
-            xc_lp =self.big_gauss.log_prob(value)
+            xc_lp =self.big_gauss.log_prob(value[...,self.K*self.N:])
         else:
             idx=np.diag_indices(self.D)
             xc=value[...,self.N*self.K:].T
