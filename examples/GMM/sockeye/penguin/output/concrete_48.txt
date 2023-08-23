@@ -15,4 +15,4 @@ Max number of iters: 10001
 Learning rate: 0.1
 
 Starting optimization
-iter 0: loss = 341336955813888.000
+iter 0: loss = 1407347503136768.000

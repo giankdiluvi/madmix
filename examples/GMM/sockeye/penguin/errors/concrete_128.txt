@@ -1,46 +1,6 @@
 Traceback (most recent call last):
-  File "gmm_run_concrete_penguin.py", line 106, in <module>
-    tmp_flow,tmp_loss=trainGMMRealNVP(
-  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 704, in trainGMMRealNVP
-    loss = -flow.log_prob(sample).mean()
-  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 406, in log_prob
-    return self.prior.log_prob(z) + logp
-  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/concrete.py", line 558, in log_prob
-    xc_lp += self.invwis.log_prob(torch.moveaxis(Sigmas[k,...],2,0))
-  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/wishart.py", line 271, in log_prob
-    self._validate_sample(value)
-  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
-    raise ValueError(
-ValueError: Expected value argument (Tensor of shape (1000, 4, 4)) to be within the support (PositiveDefinite()) of the distribution Wishart(covariance_matrix: torch.Size([4, 4]), df: 111.0), but found invalid values:
-tensor([[[        inf,        -inf,         nan,         nan],
-         [       -inf,  1.6087e+14,         nan,         nan],
-         [        nan,         nan,         inf,         nan],
-         [        nan,         nan,         nan,         inf]],
-
-        [[        inf,         nan,         inf,         nan],
-         [        nan,         inf,         inf,         nan],
-         [        inf,         inf,  6.6808e+15,         nan],
-         [        nan,         nan,         nan,         inf]],
-
-        [[        inf,         inf,         inf,         nan],
-         [        inf,  1.6484e+12,  4.3107e+12,         nan],
-         [        inf,  4.3107e+12,  4.8504e+13,         nan],
-         [        nan,         nan,         nan,         inf]],
-
-        ...,
-
-        [[        inf,        -inf,         inf,        -inf],
-         [       -inf,  9.9807e+12, -1.3700e+13,  9.2384e+12],
-         [        inf, -1.3700e+13,  1.9264e+13, -1.2760e+13],
-         [       -inf,  9.2384e+12, -1.2760e+13,  2.8011e+13]],
-
-        [[        inf,         inf,         nan,         nan],
-         [        inf,  5.4113e+14,         nan,         nan],
-         [        nan,         nan,         inf,         nan],
-         [        nan,         nan,         nan,         inf]],
-
-        [[        inf,         nan,         nan,         nan],
-         [        nan,         inf,         nan,         nan],
-         [        nan,         nan,         inf,         nan],
-         [        nan,         nan,         nan,         inf]]],
-       grad_fn=<PermuteBackward0>)
+  File "gmm_run_concrete_penguin.py", line 123, in <module>
+    flows     = pkl_load(outpath+'gmm_flows_dequant')
+  File "/arc/project/st-tdjc-1/madmix/examples/gmm/penguin/../../../src/aux.py", line 40, in pkl_load
+    with open(file+'.pkl', 'rb') as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/scratch/st-tdjc-1/madmix/gmm/penguin/gmm_flows_dequant.pkl'
