@@ -1,0 +1,35 @@
+Training a RealNVP normalizing flow with a Concrete relaxation for a GMM with the waveform data set
+
+Mixture settings:
+Mixture size K: 3
+Number of observations N: 300
+Prior precision tau0: 0.1
+
+Flow settings:
+Relaxation temperature: 0.1
+Flow depth: 64
+Flow width: 10
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.001
+
+Starting optimization
+iter 0: loss = 116046327476408811520.000
+iter 1000: loss = 27408402518900736.000
+iter 2000: loss = 68585933317865472.000
+iter 3000: loss = 21701862008815616.000
+iter 4000: loss = 124612334290206720.000
+iter 5000: loss = 5539246702067712.000
+iter 6000: loss = 1177520581902336.000
+iter 7000: loss = 764863278219264.000
+iter 8000: loss = 764014552416256.000
+iter 9000: loss = 689879323246592.000
+iter 10000: loss = 1664725028962304.000
+Done!
+Total training time: 5839.080289338017 seconds
+
+Cacheing results
+
+Saving results
+Done!
