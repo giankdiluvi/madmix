@@ -18,7 +18,7 @@ from aux import *
 #########################
 parser = argparse.ArgumentParser(description="Fit a RealNVP normalizing flow with Concrete relaxed nodes")
 
-parser.add_argument('--target', type = str, default = 'onedim', choices=['onedim', 'twodim', 'mixture'],
+parser.add_argument('--target', type = str, default = 'onedim', choices=['onedim', 'twodim', 'threedim', 'mixture'],
     help = 'Target distribution to learn')
 parser.add_argument('--temp', type = float, default = 0.1,
     help = 'Temperature of Concrete relaxation')
@@ -91,6 +91,7 @@ if target=='mixture':
     ])
     prbs=prbs/np.sum(prbs)
 
+if target=='threedim': prbs=pkl_load('prbs_threedim').flatten()
 
 ########################
 ########################

@@ -19,7 +19,7 @@ from aux import pkl_save, pkl_load
 #########################
 parser = argparse.ArgumentParser(description="Fit a RealNVP normalizing flow with dequantized nodes")
 
-parser.add_argument('--target', type = str, default = 'onedim', choices=['onedim', 'twodim', 'mixture'],
+parser.add_argument('--target', type = str, default = 'onedim', choices=['onedim', 'twodim', 'threedim', 'mixture'],
     help = 'Target distribution to learn')
 parser.add_argument('--depth', type = float, default = 10,
     help = 'Depth of the RealNVP flow')

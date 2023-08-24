@@ -67,6 +67,49 @@ def meanfield2D(lq1,lq2,lp,max_iters):
 """
 ########################
 ########################
+#    mean field 2D     #
+########################
+########################
+"""
+def meanfield3D(lq1,lq2,lq3,lp,max_iters):
+    """
+    Discrete mean field VI for 2D distributions
+
+    Inputs:
+        lq1       : (K1,) array, initial variational log probabilities of X1
+        lq2       : (K2,) array, initial variational log probabilities of X2
+        lq2       : (K3,) array, initial variational log probabilities of X3
+        lp        : (K1,K2,K3) array, target log probabilities
+        max_iters : int, max number of gradient ascent iterations
+
+    Outputs:
+        lq1_ : (K1,) array, updated X1 variational log probabilities
+        lq2_ : (K2,) array, updated X2 variational log probabilities
+        lq3_ : (K3,) array, updated X3 variational log probabilities
+    """
+
+    lq1_=np.copy(lq1)
+    lq2_=np.copy(lq2)
+    lq3_=np.copy(lq3)
+    for t in range(max_iters):
+        # update q1
+        lq1_=np.sum(np.sum(np.exp(lq2_)[np.newaxis,:,np.newaxis]*np.exp(lq3_)[np.newaxis,np.newaxis,:]*lp,axis=-1),axis=-1)
+        lq1_=lq1_-LogSumExp(lq1_[:,np.newaxis]) # normalizing constant
+
+        # update q2
+        lq2_=np.sum(np.sum(np.exp(lq1_)[:,np.newaxis,np.newaxis]*np.exp(lq3_)[np.newaxis,np.newaxis,:]*lp,axis=-1),axis=0)
+        lq2_=lq2_-LogSumExp(lq2_[:,np.newaxis]) # normalizing constant
+
+        # update q3
+        lq3_=np.sum(np.sum(np.exp(lq1_)[:,np.newaxis,np.newaxis]*np.exp(lq2_)[np.newaxis,:,np.newaxis]*lp,axis=0),axis=0)
+        lq3_=lq3_-LogSumExp(lq3_[:,np.newaxis]) # normalizing constant
+    # end for
+    return lq1_,lq2_,lq3_
+
+
+"""
+########################
+########################
 #   mean field Ising   #
 ########################
 ########################

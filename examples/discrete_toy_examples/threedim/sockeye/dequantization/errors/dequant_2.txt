@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "../toy_run_dequant.py", line 104, in <module>
+    losses    = pkl_load(outpath+filename+'_losses_dequant')
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/threedim/../../../src/aux.py", line 41, in pkl_load
+    obj = pickle.load(f)
+EOFError: Ran out of input
