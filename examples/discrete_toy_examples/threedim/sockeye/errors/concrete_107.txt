@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "../toy_run_concrete.py", line 138, in <module>
+    flows     = pkl_load(outpath+filename+'_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/threedim/../../../src/aux.py", line 41, in pkl_load
+    obj = pickle.load(f)
+_pickle.UnpicklingError: pickle data was truncated

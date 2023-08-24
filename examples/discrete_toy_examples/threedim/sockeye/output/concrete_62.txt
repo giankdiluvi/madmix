@@ -1,0 +1,32 @@
+Training a RealNVP normalizing flow with a Concrete relaxation
+
+Target distribution: threedim
+
+Flow settings:
+Relaxation temperature: 0.5
+Flow depth: 100
+Flow width: 32
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.001
+
+Starting optimization
+iter 0: loss = 402610990241284096.000
+iter 1000: loss = 4160396843810816.000
+iter 2000: loss = 4171944131821568.000
+iter 3000: loss = 1341334258450432.000
+iter 4000: loss = 124709735558545408.000
+iter 5000: loss = 39638412088573952.000
+iter 6000: loss = 11369359326838784.000
+iter 7000: loss = 173528567227875328.000
+iter 8000: loss = 1132549409570029568.000
+iter 9000: loss = 90412274216337408.000
+iter 10000: loss = 98236819866386432.000
+Done!
+Total training time: 6348.981881628977 seconds
+
+Cacheing results
+
+Saving results
+Done!

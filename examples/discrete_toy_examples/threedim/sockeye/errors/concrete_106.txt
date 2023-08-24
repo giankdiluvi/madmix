@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/threedim/../../../src/aux.py", line 36, in pkl_save
+    pickle.dump(obj, f)
+OSError: [Errno 12] Cannot allocate memory
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "../toy_run_concrete.py", line 148, in <module>
+    pkl_save(flows, outpath+filename+'_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/discrete_toy_examples/threedim/../../../src/aux.py", line 36, in pkl_save
+    pickle.dump(obj, f)
+OSError: [Errno 12] Cannot allocate memory
+Cgroup mem limit exceeded: 
