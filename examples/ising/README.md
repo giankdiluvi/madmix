@@ -3,8 +3,8 @@
 The `Ising_model.ipynb` Jupyter notebook contains code
 to reproduce the Ising model example.
 You should be able to run the whole notebook to get the results,
-except those of the Concrete distribution.
-Check the examples README to read more about that.
+except those of dequantization and the Concrete distribution.
+Check the `examples/` README to read more about that.
 
 
 
@@ -14,16 +14,8 @@ Check the examples README to read more about that.
 - `sockeye/` contains cached results and output and error messages from running
 the Real NVP architecture search on [UBC ARC Sockeye](https://arc.ubc.ca/ubc-arc-sockeye),
 UBC's high-performance computing platform
-- `sockeye_run/` includes the files necessary to learn the Real NVP Concrete relaxation
+- `sockeye_files/` includes the files necessary to learn the Real NVP Concrete relaxation
 
 
-## Files in `rockeye_files`
-- `ising_run_concrete.py` is the script to reproduce the Concrete relaxation
-experiments
-- `ising.pbs` is a file to run the `ising_run_concrete.py` 144 times
-with the architecture settings specificied in `ising_settings.txt`
-- `ising_settings.txt` contains the settings for the Real NVP architecture search
-- The `*.pkl` files with data to seed the Concrete relaxation,
-as well as the results from the flows, losses, and cpu times
-would be here but are not included in the repo due to GitHub commit size constraints:
-we'd be happy to share the files, though&mdash;get in touch!
+For more info on the files in `sockeye` and `sockeye_files`,
+check the README of the `examples/` directory.
