@@ -14,5 +14,3 @@ and mixed discrete and continuous models
 - `examples/` has examples where MAD Mix and other methods are used
 to learn different distributions, 
 some purely discrete and some including continuous variables as well
-- `ipynb/`  contains jupyter notebooks with
- preliminary implementations of the code. (TODO delete.)

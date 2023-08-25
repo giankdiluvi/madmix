@@ -38,3 +38,6 @@ old/*
 */gibbs_deprecated.py
 */concrete_deprecated.py
 examples/GMMOld/*
+
+# others
+git-filter-repo
