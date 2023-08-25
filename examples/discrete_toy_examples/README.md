@@ -27,8 +27,11 @@ experiments
 Each subdirectory (except `fig/`) has multiple files and subdirectories.
 Specifically:
 - `*.pbs` is a file to run the `toy_run_concrete.py` 144 times
+or `toy_run_dequant.py` 36 times
 with the architecture settings specificied in `*_settings.txt`
-- `*_settings.txt` contains the settings for the Real NVP architecture search
+or `*_settings_dequant.txt` (respectively)
+- `*_settings.txt` contains the settings for the Concrete Real NVP architecture search
+and `*_settings_dequant.txt` those for the dequantization Real NVP
 - `sockeye/` contains cached results and output and error messages from running
 the Real NVP architecture search on [UBC ARC Sockeye](https://arc.ubc.ca/ubc-arc-sockeye),
 UBC's high-performance computing platform
