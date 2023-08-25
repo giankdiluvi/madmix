@@ -28,7 +28,7 @@ one low-dimensional and another high-dimensional
 
 Each Jupyter notebook defines a vectorized log pmf function
 for the discrete target distribution.
-This function simultaneously returns either the 
+This function returns either the 
 joint pmf or the full conditionals (given an axis input).
 If you wish to implement your own target log pmf
 for an M-dimensional problem where the m-th variable
@@ -59,9 +59,9 @@ For specific examples, check the experiments.
 
 ## Reproducing the dequantization and Concrete relaxation results
 
-To reproduce the results of Concrete relaxations,
+To reproduce the results of dequantization and Concrete relaxations,
 you have to run a separate `*_run_concrete.py`
-or `*_run_dequant.py` script
+or `*_run_dequant.py` script, respectively,
 that saves results in  pickle files.
 The Jupyter notebooks only load these results.
 Due to GitHub size constraints,
@@ -73,4 +73,4 @@ or 144 (Concrete) Real NVP normalizing flows
 with different architecture settings,
 which we recommend running in parallel fashion.
 Scripts to do this in `.pbs` format are included for each experiment,
-along with the settings used in the manuscript.
+along with the settings used in the manuscript, in the `sockeye*/` directories.
