@@ -9,7 +9,7 @@ Check the `examples/`` README to read more about that.
 
 
 ## Directory roadmap
-- `Gaussian_mixture_model.ipynb` contains both GMM examples
+- `GaussianMixtureModel.ipynb` contains both GMM examples
 - `sockeye/` contains cached results and output and error messages from running
 the Real NVP architecture search on [UBC ARC Sockeye](https://arc.ubc.ca/ubc-arc-sockeye),
 UBC's high-performance computing platform
