@@ -1,4 +1,4 @@
-# Mad Mix
+# MAD Mix
 
 This is a `python` package that implements MAD Mix,
 a flow-based variational methodology to learn discrete distributions.
