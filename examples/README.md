@@ -9,12 +9,19 @@ in a Jupyter notebook.
 
 
 ## Directory roadmap
-- `discrete_toy_examples/` contains three toy discrete examples:
-a univariate discrete distribution,
-a bivariate discrete distribution,
-and a bivariate mixture
-- `GMM` has a Gaussian mixture model example
-- `ising` includes an Ising model example
+- `discrete_toy_examples/` contains the three toy discrete examples:
+a 1D discrete distribution,
+a 2D discrete distribution,
+and a 3D mixture.
+It also implements a mixture of MAD Mix flows to learn a discrete mixture
+- `GMM/` has two Gaussian mixture model examples,
+one with the 
+[Palmer penguins](https://github.com/mcnakhaee/palmerpenguins)
+data set and another with the 
+[waveform](https://hastie.su.domains/ElemStatLearn/datasets/waveform.train)
+data set
+- `ising/` includes two Ising model examples,
+one low-dimensional and another high-dimensional
 
 
 ## Defining a target log probability
@@ -50,18 +57,20 @@ def lp(x,axis=None):
 For specific examples, check the experiments.
 
 
-## Reproducing the Concrete relaxation results
+## Reproducing the dequantization and Concrete relaxation results
 
 To reproduce the results of Concrete relaxations,
-you have to run a separate `*_run_concrete.py` script
+you have to run a separate `*_run_concrete.py`
+or `*_run_dequant.py` script
 that saves results in  pickle files.
 The Jupyter notebooks only load these results.
 Due to GitHub size constraints,
 the pickle files used in the manuscript could not be committed to this repo,
 but are available upon request 
 (if you do not want to generate them on your own).
-Each experiment requires optimizing 144 Real NVP normalizing flows
+Each experiment requires optimizing 36 (dequantization)
+or 144 (Concrete) Real NVP normalizing flows
 with different architecture settings,
-which we recommend running in embarrasingly parallel fashion.
+which we recommend running in parallel fashion.
 Scripts to do this in `.pbs` format are included for each experiment,
 along with the settings used in the manuscript.
