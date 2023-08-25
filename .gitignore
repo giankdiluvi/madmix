@@ -26,8 +26,9 @@ Manifest.toml
 # no pickle files
 *.pkl
 
-# no data files
-/ipynb/dat/*
+# no tmp ipynb files
+/ipynb/*
+#/ipynb/dat/*
 
 # no misc or old files
 misc/*
