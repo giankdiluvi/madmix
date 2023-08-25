@@ -9,6 +9,10 @@ in a Jupyter notebook.
 
 
 ## Directory roadmap
+- `summary/` contains the Jupyter notebook to generate the summary Fig. 2 in the paper.
+The pickle files with the results of the experiments are not in the repo due to size constraints,
+but you can generate them by running each experiment beforehand (which will automatically save these results),
+or by opening an issue in the repo requesting the files
 - `discrete_toy_examples/` contains the three toy discrete examples:
 a 1D discrete distribution,
 a 2D discrete distribution,
