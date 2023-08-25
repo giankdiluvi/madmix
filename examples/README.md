@@ -78,3 +78,21 @@ with different architecture settings,
 which we recommend running in parallel fashion.
 Scripts to do this in `.pbs` format are included for each experiment,
 along with the settings used in the manuscript, in the `sockeye*/` directories.
+
+
+### Files for each example
+Each subdirectory with code for Concrete relaxations and dequantization
+has multiple files and subdirectories to run these methods.
+Specifically:
+- `*.pbs` are files to run the `*_run_concrete.py` script 144 times
+or the `*_run_dequant.py` script 36 times
+with the architecture settings specificied in `*_settings.txt`
+or `*_settings_dequant.txt` (respectively)
+- `*_settings.txt` contains the settings for the Concrete Real NVP architecture search
+and `*_settings_dequant.txt` those for the dequantization Real NVP
+- `sockeye/` contains cached results and output and error messages from running
+the Real NVP architecture search on [UBC ARC Sockeye](https://arc.ubc.ca/ubc-arc-sockeye),
+UBC's high-performance computing platform
+- The `*.pkl` files with the results from the flows, losses, and cpu times
+would be here but are not included in the repo due to GitHub commit size constraints:
+we'd be happy to share the files, though&mdash;get in touch!
