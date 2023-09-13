@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as stats
 import sys
 from discrete_mixflows import *
 
@@ -169,3 +170,107 @@ def gibbs_gmm(y,mu0,sigma0,w0,steps,burnin_pct,seed=0):
     # end for
     burnin_steps+=1 # to account for initial draw
     return xs[burnin_steps:,...],ws[burnin_steps:,...],mus[burnin_steps:,...],sigmas[burnin_steps:,...]
+
+
+
+"""
+########################################
+########################################
+Spike and Slab Gibbs sampler
+########################################
+########################################
+"""
+
+def gibbs_sas(y,x,steps,burnin_pct,seed=0):
+    """
+    Run a Gibbs sampler for a spike-and-slab model
+    with univariate data y and K-dimensional covariates x
+    y~N(x.T beta, sigma**2) where beta is sparse.
+
+    Inputs:
+        y          : (N,) array, observations
+        x          : (N,K) array, covariates (N is no. of observations, K is no. of covariates)
+        steps      : int, number of steps to run the sampler from (after burn-in)
+        burnin_pct : float, percentage of burn-in desired
+        seed       : int, random seed
+
+     Outputs:
+
+    Note: the total number of steps the sampler is run for is
+          (T=steps+burn_in), where (burn_in=T*burnin_pct).
+          The total burn-in steps is therefore
+          (steps*burnin_pct/(1-burnin_pct))
+    """
+    np.random.seed(0+seed)
+
+    # set hyperparams
+    a,b=1.,1.
+    a1,a2=0.1,0.1
+    s=0.5
+
+    # get sizes, calculate steps
+    N,K=x.shape
+    burnin_steps=int(steps*burnin_pct/(1-burnin_pct))
+    total_steps=burnin_steps+steps+1
+
+    # init arrays for sample storage
+    thetas = np.zeros(total_steps)
+    pis = np.zeros((total_steps,K),dtype=int)
+    sigmas2 = np.zeros(total_steps)
+    taus2 = np.zeros(total_steps)
+    betas = np.zeros((total_steps,K))
+
+    # generate initial samples
+    thetas[0] = np.random.beta(a=a,b=b,size=1) # fixed initial params a=b=1
+    pi0 = np.random.choice(2,size=K,p=[thetas[0],1-thetas[0]])
+    pis[0,:] = pi0
+    sigmas2[0] = np.random.gamma(shape=a1,scale=1./a2) # fixed initial params a0=a1=0.1
+    taus2[0] = stats.invgamma(a=0.5,scale=s**2/2).rvs() # fixed initial param s=0.5
+    betas[0,:] = np.sqrt(sigmas2[0]*taus2[0])*np.random.randn(1,K)
+    betas[0,:] = np.linalg.inv(x.T@x)@(x.T@y)
+    idx = pi0<1
+    betas[0,idx]=0
+
+    for t in range(total_steps-1):
+        if t<burnin_steps: print('Burn-in: '+str(t+1)+'/'+str(burnin_steps),end='\r')
+        if t>=burnin_steps: print('Sampling: '+str(t+1-burnin_steps)+'/'+str(steps),end='\r')
+
+        # summary stats
+        sumpi = np.sum(pis[t,:])
+        residuals = y-x@betas[t,:]
+
+        # update parameters
+        thetas[t+1] = np.random.beta(a+sumpi,b+K-sumpi)
+        sigmas2[t+1] = np.random.gamma(shape=a1+N/2,
+                                       scale=1/(a2+np.sum(residuals**2)/2))
+        taus2[t+1] = stats.invgamma(a=0.5+0.5*sumpi,
+                                    scale=s**2/2+0.5*np.sum(betas[t,:]**2)/sigmas2[t]).rvs()
+
+        for k in range(K):
+            # loo stats
+            tmp_beta = np.copy(betas[t,:])
+            tmp_beta[k] = 0. # remove kth param from regression
+            z = y-x@tmp_beta
+            xk = np.copy(x[:,k])
+            cond_var = np.sum(xk**2)+1./taus2[t+1]
+
+            # cat prob
+            term1 = np.sum(xk*z)**2 / (2.*sigmas2[t+1]*cond_var)
+            l1 = -0.5*np.log(taus2[t+1])+term1-0.5*np.log(cond_var)+np.log(thetas[t+1])
+            l2 = np.log(1-thetas[t+1])
+            maxl = max(l1,l2)
+            ldenominator = maxl+np.log(np.exp(l1-maxl)+np.exp(l2-maxl)) # logsumexp trick
+            xi = np.exp(l1-ldenominator)
+
+            # sample cat
+            pis[t+1,k] = np.random.choice(2,size=1,p=[1.-xi,xi])
+        # end for
+        curr_pis = pis[t+1,:]
+
+        ridge_hat = np.linalg.inv((x.T@x)/sigmas2[t+1]+np.eye(K)/(sigmas2[t+1]*taus2[t+1]))
+        betas[t+1,:]=np.random.multivariate_normal(mean=ridge_hat@(x.T@y)/sigmas2[t+1],cov=ridge_hat,size=1)
+        idx = curr_pis<1
+        betas[t+1,idx]=0
+    # end for
+
+    return pis[burnin_steps:,:],betas[burnin_steps:,:],thetas[burnin_steps:],sigmas2[burnin_steps:],taus2[burnin_steps:]
