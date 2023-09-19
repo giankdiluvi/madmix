@@ -436,3 +436,293 @@ def HtoSigmaJacobian(Hs):
         # end for
     # end for
     return jacobian
+
+
+"""
+########################################
+########################################
+Spike and Slab auxiliary functions
+########################################
+########################################
+"""
+
+def sas_unconstrain(theta,tau2,sigma2):
+    """
+    Map constrained to unconstrained (real) parameters
+
+    Inputs:
+        theta  : (B,) array, Categorical probs (in (0,1))
+        tau2   : (B,) array, beta variances (>0)
+        sigma2 : (B,) array, obs variances (>0)
+
+    Outputs:
+        thetau  : (B,) array, unconstrained thetas
+        tau2u   : (B,) array, unconstrained tau2s
+        sigma2u : (B,) array, unconstrained sigma2s
+    """
+    thetau  = np.log(theta)-np.log1p(-theta)
+    tau2u   = np.log(tau2)
+    sigma2u = np.log(sigma2)
+    return thetau,tau2u,sigma2u
+
+
+def sas_constrain(thetau,tau2u,sigma2u):
+    """
+    Map unconstrained to constrained parameters
+
+    Inputs:
+        thetau  : (B,) array, unconstrained thetas
+        tau2u   : (B,) array, unconstrained tau2s
+        sigma2u : (B,) array, unconstrained sigma2s
+
+    Outputs:
+        theta  : (B,) array, Categorical probs (in (0,1))
+        tau2   : (B,) array, beta variances (>0)
+        sigma2 : (B,) array, obs variances (>0)
+    """
+    theta  = 1./(1.+np.exp(-thetau))
+    tau2   = np.exp(tau2u)
+    sigma2 = np.exp(sigma2u)
+    return theta,tau2,sigma2
+
+
+def sas_flatten(theta,tau2,sigma2,beta):
+    """
+    Flatten parameters into single array
+    Parameters can be either constrained or unconstrained
+
+    Inputs:
+        theta  : (B,) array, Categorical probs
+        tau2   : (B,) array, beta variances
+        sigma2 : (B,) array, obs variances
+        beta   : (K,B) array, regression coefficients
+
+    Outputs:
+        xc     : (3+K,B) array, flattened parameters
+    """
+    return np.vstack((theta[None,:],tau2[None,:],sigma2[None,:],beta))
+
+
+def sas_unflatten(xc):
+    """
+    Unflatten parameters into multiple arrays
+    Parameters can be either constrained or unconstrained
+
+    Inputs:
+        xc     : (3+K,B) array, flattened parameters
+
+    Outputs:
+        theta  : (B,) array, Categorical probs
+        tau2   : (B,) array, beta variances
+        sigma2 : (B,) array, obs variances
+        beta   : (K,B) array, regression coefficients
+    """
+    theta  = xc[0,:]
+    tau2   = xc[1,:]
+    sigma2 = xc[2,:]
+    beta   = xc[3:,:]
+    return theta,tau2,sigma2,beta
+
+
+"""
+########################################
+########################################
+Spike and Slab target specification
+########################################
+########################################
+"""
+
+def sas_gen_lp(x,y):
+    """
+    Create a log probability function for the Spike and Slab example
+
+    Inputs:
+        x : (N,K) array, covariates (N = # of observations, K = # of covariates)
+        y : (N,) array, response variable observations
+
+    Outpus:
+        lp : function, log pmf of labels
+    """
+    N,K = x.shape
+
+    def lp(xd,xc,axis=None):
+        # compute the univariate log joint and conditional target pmfs
+        #
+        # inputs:
+        #    xd     : (K,B) array with regression coeff. indicators (in {0,1})
+        #    xc     : (3+K,B) array with real-valued parameters
+        #    axis   : int (0<axis<K), axis to find full conditional; if None then returns the log joint
+        # outputs:
+        #   ext_lprb : if axis is None, (B,) array with log joint; else, (B,2) array with d conditionals
+        B=xd.shape[1]
+
+        thetau,tau2u,sigma2u,beta=sas_unflatten(xc) #(B,),(B,),(B,),(K,B)
+        theta,tau2,sigma2=sas_constrain(thetau,tau2u,sigma2u)
+
+        lprbs=np.zeros((K,2,B))
+        for k in range(K):
+            for b in range(B):
+                # loo stats
+                tmp_beta = np.copy(beta[:,b])
+                tmp_beta[k] = 0. # remove kth param from regression
+                z = y-x@tmp_beta
+                xk = np.copy(x[:,k])
+                cond_var = np.sum(xk**2)+1./tau2[b]
+
+                # cat prob
+                term1 = np.sum(xk*z)**2 / (2.*sigma2[b]*cond_var)
+                l1 = -0.5*np.log(tau2[b])+term1-0.5*np.log(cond_var)+np.log(theta[b])
+                l2 = np.log(1-theta[b])
+                maxl = max(l1,l2)
+                ldenominator = maxl+np.log(np.exp(l1-maxl)+np.exp(l2-maxl)) # logsumexp trick
+                lprbs[k,:,b] = np.array([l2,l1])-ldenominator
+            # end for
+        # end for
+
+        if axis is None:
+            ext_lprb=np.zeros((K,B))
+            for b in range(B): ext_lprb[:,b]=lprbs[np.arange(0,K),xd[:,b],b]
+            return np.sum(ext_lprb,axis=0)
+        # end if
+        return lprbs[axis,:,:].T
+    return lp
+
+
+def sas_gen_grad_lp(x,y):
+    """
+    Create a der logp(xc) generator for the GMM example
+
+    Inputs:
+        x : (N,K) array, covariates (N = # of observations, K = # of covariates)
+        y : (N,) array, response variable observations
+
+    Outpus:
+        gen_grad_lp : function, score function generator
+    """
+    # set hyperparams
+    a,b=1.,1.
+    a1,a2=0.1,0.1
+    s=0.5
+
+    def gen_grad_lp(xd):
+        # generate the score function for Hamiltonian dynamics
+        #
+        # inputs:
+        #    xd     : (K,B) array with current labels
+        # outputs:
+        #   grad_lp : function, vectorized score function ((K',B)->(K',B))
+        #
+        # Note: K is the number of covariates and
+        # B is the number of data points (for vectorizing)
+        # K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+
+        def mygrad_lp(xc): # in: (K',B)
+            # retrieve unflattened params
+            thetau,tau2u,sigma2u,beta=sas_unflatten(xc) #(B,),(B,),(B,),(K,B)
+            theta,tau2,sigma2=sas_constrain(thetau,tau2u,sigma2u)
+
+            # summary stats
+            sumpis = np.sum(xd,axis=0) #(B,)
+            res = y[None,:]-np.squeeze(np.matmul(x[None,:,:],beta.T[:,:,None])) #(B,N)
+
+            grad_theta   = (a-1.)/theta - (b-1.)/(1.-theta) - 1./(theta*(1.-theta)) #(B,)
+            grad_tau2    = s**2/2*tau2**2 - (1.+sumpis)/2*tau2 + np.sum(xd*beta**2,axis=0)/2*sigma2*tau2 #(B,)
+            grad_sigma2  = (2.*a2+np.sum(res**2,axis=1))/2*sigma2**2 -(2.*a1+sumpis+y.shape[0])/2.*sigma2 #(B,)
+            grad_sigma2 += np.sum(xd*beta**2,axis=0)/2*sigma2*tau2 #(B,)
+
+            grad_beta    = (x.T@y)[None,:] - np.squeeze(np.matmul((x.T@x)[None,:,:],beta.T[:,:,None])) #(B,K)
+            grad_beta   += -beta.T/tau2[:,None] #(B,K)
+
+            return sas_flatten(grad_theta,grad_tau2,grad_sigma2,grad_beta.T) # out: (K',B)
+        return mygrad_lp
+    return gen_grad_lp
+
+"""
+###########################################
+###########################################
+Spike and Slab approximation specification
+###########################################
+###########################################
+"""
+def sas_gen_lq0(x,y,nu2):
+    """
+    Create a log density evaluator q0 in the Spike and Slab example
+
+    Inputs:
+        x   : (N,K) array, covariates (N = # of observations, K = # of covariates)
+        y   : (N,) array, response variable observations
+        nu2 : float, regression coefficients variance
+
+    Outputs:
+        lq0 : function, reference sampler
+    """
+    N,K=x.shape
+
+    # get MLE
+    beta_hat = np.linalg.inv(x.T@x)@(x.T@y)
+
+    def lq0(xd,ud,xc,rho,uc):
+        # Inputs:
+        # xd  : (K,B) array, regression coeff. indicators
+        # ud  : (K,B) array, discrete unifs
+        # xc  : (3+K,B) array, continuous vars
+        # rho : (3+K,B) array, momenta
+        # uc  : (B,) array, continuous unifs
+        #
+        # Outputs: (B,) array, reference log density
+        B=xd.shape[1]
+
+        # retrieve unflattened params
+        thetau,tau2u,sigma2u,beta=sas_unflatten(xc) #(B,),(B,),(B,),(K,B)
+        theta,tau2,sigma2=sas_constrain(thetau,tau2u,sigma2u)
+
+        lq  = -N*np.log(2)*np.ones(B) # xd unif ref, ud ref = 0 (uniform[0,1])
+        lq += lap_lm(rho) # momenta; (uc ref = 0 (uniform[0,1]), theta ref = 0 (uniform[0,1]))
+        lq += stats.invgamma(a=1.).logpdf(tau2) - np.log(tau2)  # tau2
+        lq += stats.gamma(a=1.).logpdf(sigma2) - np.log(sigma2) # sigma2
+        lq += stats.multivariate_normal(mean=beta_hat,cov=nu2*np.eye(K)).logpdf(beta.T) # beta
+
+        return lq
+    return lq0
+
+
+def sas_gen_randq0(x,y,nu2):
+    """
+    Create a sampler for q0 in the Spike and Slab example
+
+    Inputs:
+        x   : (N,K) array, covariates (N = # of observations, K = # of covariates)
+        y   : (N,) array, response variable observations
+        nu2 : float, regression coefficients variance
+
+    Outputs:
+        randq0    : function, reference sampler
+    """
+    N,K=x.shape
+
+    # get MLE
+    beta_hat = np.linalg.inv(x.T@x)@(x.T@y)
+
+    def randq0(size):
+        # Inputs: size : int, sample size
+
+        # discrete vars
+        rxd  = np.random.randint(low=0,high=2,size=(K,size))
+        rud  = np.random.rand(K,size)
+
+        # continuous vars
+        rrho = np.random.laplace(size=(3+K,size))
+        ruc  = np.random.rand(size)
+
+        # relevant continuous params separately
+        rtheta = np.random.rand(size)
+        rtau2 = 1./np.random.gamma(shape=1., size=size)
+        rsigma2 = np.random.gamma(shape=1.,size=size)
+        rbeta = beta_hat[:,None]+np.sqrt(nu2)*np.random.randn(K,size)
+
+        # unconstrain and flatten continuous params
+        rthetau,rtau2u,rsigma2u=sas_unconstrain(rtheta,rtau2,rsigma2)
+        rxc=sas_flatten(rthetau,rtau2u,rsigma2u,rbeta)
+        return rxd,rud,rxc,rrho,ruc
+
+    return randq0
