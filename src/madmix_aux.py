@@ -203,11 +203,11 @@ def gmm_gen_grad_lp(K,y):
 
             # mean score
             grads_logmu=np.zeros((K_,D_,B_))
-            grads_logmu=-N_pool[k,None,:]*np.sum(invSigmas*cluster_diffs[:,None,:,:],axis=1) #(K,D,B)
+            grads_logmu=-N_pool[:,None,:]*np.sum(invSigmas*cluster_diffs[:,None,:,:],axis=1) #(K,D,B)
 
             # cov score (wild one)
             grads_logsigma=np.zeros((K_,D_,D_,B_))
-            grads_logsigma=-0.5*(1+N_pool[k,None,None,:])*invSigmasT #(K,D,D,B)
+            grads_logsigma=-0.5*(1+N_pool[:,None,None,:])*invSigmasT #(K,D,D,B)
             grads_logsigma-=0.5*N_pool[:,None,None,:]*cluster_diffs[:,:,None,:]*cluster_diffs[:,None,:,:] #(K,D,D,B)
             tmpinvSigmasT=np.moveaxis(invSigmasT,3,1)
             tmpS_poolT=np.moveaxis(S_poolT,3,1)
