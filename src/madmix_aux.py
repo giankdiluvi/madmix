@@ -524,6 +524,56 @@ def sas_unflatten(xc):
     return theta,tau2,sigma2,beta
 
 
+def sas_pack(xd,ud,xc,rho,uc):
+    """
+    Pack output of MAD Mix into a single np array for pickling
+
+    Inputs:
+        xd  : (K,B) array, labels sample (N = # of observations, B = sample size)
+        ud  : (K,B) array, discrete unifs sample
+        xc  : (K',B) array, continuous variables sample
+        rho : (K',B) array, momentum variables sample
+        uc  : (B,) array, continuous unifs sample
+
+    Outpus:
+        out : (L,B) array, stacked samples
+
+    Note:
+    K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+    L=K+K+K'+K'+1
+    """
+
+    return np.vstack((xd,ud,xc,rho,uc[None,:]))
+
+
+def sas_unpack(results,K):
+    """
+    Pack output of MAD Mix into a single np array for pickling
+
+    Outputs:
+        results : (L,B) array, stacked samples
+
+    Inputs:
+        xd  : (K,B) array, labels sample (N = # of observations, B = sample size)
+        ud  : (K,B) array, discrete unifs sample
+        xc  : (K',B) array, continuous variables sample
+        rho : (K',B) array, momentum variables sample
+        uc  : (B,) array, continuous unifs sample
+
+    Note:
+    K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+    L=K+K+K'+K'+1
+    """
+    Kp=3+K
+    xd=results[:K,:]
+    ud=results[K:(2*K),:]
+    xc=results[(2*K):(2*K+Kp),:]
+    rho=results[(2*K+Kp):(2*K+Kp+Kp),:]
+    uc=np.squeeze(results[(2*K+Kp+Kp):,:])
+
+    return xd,ud,xc,rho,uc
+
+
 """
 ########################################
 ########################################
