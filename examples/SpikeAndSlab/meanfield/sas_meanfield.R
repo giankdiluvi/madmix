@@ -22,10 +22,12 @@ prst_dat_y = readr::read_csv('../dat/prst_dat_y.csv',
                              col_names = FALSE)
 
 # fit prst model ####
+t0 = Sys.time()
 prst_model = sparsevb::svb.fit(X = prst_dat_x %>% as.matrix(),
                                Y = prst_dat_y %>% pull(),
                                family = "linear",
                                slab = "gaussian")
+tprst = Sys.time()-t0
 
 
 # save prst results ####
@@ -52,10 +54,12 @@ spr_dat_y = readr::read_csv('../dat/spr_dat_y.csv',
                              col_names = FALSE)
 
 # fit spr model ####
+t0 = Sys.time()
 spr_model = sparsevb::svb.fit(X = spr_dat_x %>% as.matrix(),
                               Y = spr_dat_y %>% pull(),
                               family = "linear",
                               slab = "gaussian")
+tspr = Sys.time()-t0
 
 
 # save spr results ####
@@ -65,3 +69,9 @@ spr_results = tibble::tibble(
   pi    = spr_model$gamma
 )
 readr::write_csv(spr_results,"../results/mf_spr_results.csv")
+
+
+# save timing results ####
+mf_timing = tibble::tibble(time = c(as.double(tprst),as.double(tspr)))
+readr::write_csv(mf_timing,
+                 "../results/mf_cput.csv")
