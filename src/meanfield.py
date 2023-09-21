@@ -357,3 +357,65 @@ def meanfield_gmm_rq(size,alphas,lrs,ms,betas,invWs,nus):
     rmus = ms[...,None]+np.moveaxis(np.squeeze(np.matmul(chol,np.random.randn(K,size,D,1))),1,2) # means
 
     return rxd,rw,rmus,rSigmas
+
+
+def meanfield_sas_elbo(B,mu,sigma,pi,nu,x,y):
+    """
+    Estimate the ELBO from the mean-field approximation
+    to the posterior in the spike-and-slab example
+
+    Inputs:
+        B     : int, Monte Carlo sample size
+        mu    : (K,) array, means of regression coefficients
+        sigma : (K,) array, std deviations of regression coefficients
+        pi    : (K,) array, prbs of inclusion of regression coefficients
+        nu    : float, prior std deviation of regression coefficients
+        x     : (N,K) array, covariates
+        y     : (N,) array, response variable observations
+
+    Outpus:
+        ELBO  : float, estimate of ELBO(q||p)
+    """
+    N,K = x.shape
+
+    # generate sample from variational approx
+    idx = (np.random.rand(K,B) < pi[:,None]).astype(int) # sample inclusion indicators via inverse cdf, (K,B)
+    rbetas = nu*np.random.randn(K,B)*idx # sample betas from spike and slab
+
+    # evaluate var likelihood
+    #q  = (1.-pi[:,None])*(1.-idx)
+    #qmeans = (rbetas-mu[:,None]).T #(B,K)
+
+    #q += pi[:,None]*(-0.5*K*np.log(2*np.pi)-np.sum(np.log(sigma))
+    #                 -0.5*np.squeeze(np.matmul(qmeans[:,None,:],
+    #                                           np.matmul(np.eye(K)[None,:,:]/sigma**2,qmeans[:,:,None]))))
+
+    lq = 0.
+    for k in range(K):
+        l1 = (1.-pi[k])*(1.-idx[k,:])
+        l1[l1==0] = 1e-32
+        l1 = np.log(l1)
+        l2 = (stats.norm(loc=mu[k], scale=sigma[k]).logpdf(rbetas[k,:]) + np.log(pi[k]))*idx[k,:]
+        l2[l2==0]=-32
+        m = np.maximum(l1,l2)
+        lq += m + np.log(np.exp(l1-m)+np.exp(l2-m)) #logsumexp trick for stability
+    # end for
+
+    # evaluate posterior
+    lpbeta = 0.
+    for k in range(K):
+        l1 = 0.5*(1.-idx[k,:])
+        l1[l1==0] = 1e-32
+        l1 = np.log(l1)
+        l2 = (stats.norm(loc=0, scale=nu).logpdf(rbetas[k,:]) - np.log(2))*idx[k,:]
+        l2[l2==0]=-32
+        m = np.maximum(l1,l2)
+        lpbeta += m + np.log(np.exp(l1-m)+np.exp(l2-m)) #logsumexp trick for stability
+    # end for
+
+    ll_mean = np.squeeze(np.matmul(x[None,:,:],rbetas.T[:,:,None]))
+    ll = -0.5*N*np.log(2*np.pi) - 0.5*np.sum((ll_mean-y[None,:])**2,axis=1)
+
+    lp = lpbeta+ll
+
+    return np.mean(lq-lp)
