@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "sas_run_dequant_prst.py", line 95, in <module>
+    tmp_flow,tmp_loss=dequantization.train_dequant_sas(depth,K,dequant_sample,width,max_iters,lr)
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/dequantization/prst/dequantization.py", line 482, in train_dequant_sas
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/dequantization/prst/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/dequantization/prst/dequantization.py", line 361, in log_prob
+    return torch.distributions.MultivariateNormal(torch.zeros(dim), torch.eye(dim)).log_prob(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/multivariate_normal.py", line 214, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (5001, 19)) to be within the support (IndependentConstraint(Real(), 1)) of the distribution MultivariateNormal(loc: torch.Size([19]), covariance_matrix: torch.Size([19, 19])), but found invalid values:
+tensor([[nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan],
+        ...,
+        [nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan]], grad_fn=<AddBackward0>)
