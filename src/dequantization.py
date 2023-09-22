@@ -332,3 +332,289 @@ def dequant_gmm_unpack(x,N,K,D):
 
     return xd,ws,mus,Sigmas
 #========================================
+
+
+
+"""
+########################################
+########################################
+Spike and Slab functions
+########################################
+########################################
+"""
+
+
+from torch.distributions.distribution import Distribution
+class sas_ref_dequant(Distribution):
+    """
+    Reference distribution for inclusion idx, prbs, variances,
+    and regression coefficients of a Spike-and-Slab model.
+
+    Inputs:
+        K    : int, number of covariates
+    """
+    def __init__(self, K):
+        self.K = K
+
+    def log_prob(self, value):
+        dim=value.shape[1]
+        return torch.distributions.MultivariateNormal(torch.zeros(dim), torch.eye(dim)).log_prob(value)
+
+    def sample(self,sample_shape=torch.Size()):
+        return torch.randn(sample_shape[0],int(self.K+3+self.K))
+#========================================
+
+
+def create_dequant_sas_RealNVP(depth,width,K):
+    """
+    Wrapper to init a RealNVP flow for a dequantization problem
+    with dimension dim that consists of depth layers
+
+    The reference distribution is an isotropic Gaussian
+
+    Inputs:
+        depth  : int, number of couplings (transformations)
+        width  : int, width of the linear layers
+        K      : int, number of covariates
+
+    Outputs:
+        flow   : Module, RealNVP
+    """
+    dim=int(K+3+K)
+
+    # create channel-wise masks of appropriate size
+    masks=torch.zeros((2,dim))
+    masks[0,:(dim//2)]=1
+    masks[1,(dim-(dim//2)):]=1
+    masks=masks.repeat(depth//2,1)
+
+    # define reference distribution
+    ref = sas_ref_dequant(K)
+
+    # define scale and translation architectures
+    net_s = lambda: nn.Sequential(
+        nn.Linear(dim, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, dim),
+        nn.Tanh()
+    )
+    net_t = lambda: nn.Sequential(
+        nn.Linear(dim, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, dim)
+    )
+    return concrete.RealNVP(net_s, net_t, masks, ref, gmm=True)
+
+
+def sas_dequant_sample(pred_pi,pred_beta,pred_theta,pred_sigma2,pred_tau2):
+    """
+    Generate sample for learning GMM with RealNVP
+    dequantizing the labels
+
+    Inputs:
+        pred_pi     : (steps,K) array, predicted inclusion idx (from `gibbs.gibbs_gmm`)
+        pred_beta   : (steps,K) array, predicted regression coefficients (from `gibbs.gibbs_gmm`)
+        pred_theta  : (steps,) array, predicted inclusion prbs (from `gibbs.gibbs_gmm`)
+        pred_sigma2 : (steps,) array, predicted observation vars (from `gibbs.gibbs_gmm`)
+        pred_tau2   : (steps,) array, predicted beta vars (from `gibbs.gibbs_gmm`)
+
+    Outputs:
+        dequant_sample : (steps,K') array, samples to be used in training
+
+    Note: K' = K (pi) + 3 (theta, sigma2, tau2) + K (beta)
+    """
+    # convert gibbs output to torch tensors
+    piu    = torch.from_numpy(pred_pi.T)
+    betau  = torch.from_numpy(pred_beta.T)
+    theta  = torch.from_numpy(pred_theta)
+    sigma2 = torch.from_numpy(pred_sigma2)
+    tau2   = torch.from_numpy(pred_tau2)
+
+    # unconstrain results
+    thetau,tau2u,sigma2u = sas_unconstrain_torch(theta,tau2,sigma2)
+
+    # dequantize label sample
+    xd = piu + torch.rand(pred_pi.T.shape)
+
+    # deal with continuous variables
+    xc=sas_flatten_torch(thetau,tau2u,sigma2u,betau)
+
+    # merge everything
+    dequant_sample=torch.vstack((xd,xc)).float().T
+
+    return dequant_sample
+
+
+def train_dequant_sas(depth,K,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+    """
+    Train a RealNVP normalizing flow targeting a GMM with dequantized cluster labels
+
+    Input:
+        depth     : int, number of couplings (transformations)
+        K         : int, number of regressors
+        sample    : (B,K') array, samples from target for training; B is the Monte Carlo sample size
+        width     : int, width of the linear layers
+        max_iters : int, max number of Adam iters
+        lr        : float, Adam learning rate
+        seed      : int, for reproducinility
+        verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
+
+    Output:
+        flow      : distribution, trained normalizing flow
+        losses    : (maxiters,) array with loss traceplot
+
+    Note: K' = K (pi) + 3 (theta, sigma2, tau2) + K (beta)
+    """
+    torch.manual_seed(seed)
+
+    # create flow
+    flow=create_dequant_sas_RealNVP(depth,width,K)
+
+    # train flow
+    optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
+    losses=np.zeros(max_iters)
+
+    for t in range(max_iters):
+        loss = -flow.log_prob(sample).mean()
+        losses[t]=loss
+
+        optimizer.zero_grad()
+        loss.backward(retain_graph=True)
+        optimizer.step()
+
+        if verbose and t%(max_iters//10) == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
+    # end for
+    return flow,losses
+
+
+
+"""
+########################################
+########################################
+Spike and Slab auxiliary functions
+########################################
+########################################
+"""
+
+def sas_unconstrain_torch(theta,tau2,sigma2):
+    """
+    Map constrained to unconstrained (real) parameters
+
+    Inputs:
+        theta  : (B,) array, Categorical probs (in (0,1))
+        tau2   : (B,) array, beta variances (>0)
+        sigma2 : (B,) array, obs variances (>0)
+
+    Outputs:
+        thetau  : (B,) array, unconstrained thetas
+        tau2u   : (B,) array, unconstrained tau2s
+        sigma2u : (B,) array, unconstrained sigma2s
+    """
+    thetau  = torch.log(theta)-torch.log1p(-theta)
+    tau2u   = torch.log(tau2)
+    sigma2u = torch.log(sigma2)
+    return thetau,tau2u,sigma2u
+
+def sas_constrain_torch(thetau,tau2u,sigma2u):
+    """
+    Map unconstrained to constrained parameters
+
+    Inputs:
+        thetau  : (B,) array, unconstrained thetas
+        tau2u   : (B,) array, unconstrained tau2s
+        sigma2u : (B,) array, unconstrained sigma2s
+
+    Outputs:
+        theta  : (B,) array, Categorical probs (in (0,1))
+        tau2   : (B,) array, beta variances (>0)
+        sigma2 : (B,) array, obs variances (>0)
+    """
+    theta  = 1./(1.+torch.exp(-thetau))
+    tau2   = torch.exp(tau2u)
+    sigma2 = torch.exp(sigma2u)
+    return theta,tau2,sigma2
+
+
+def sas_flatten_torch(theta,tau2,sigma2,beta):
+    """
+    Flatten parameters into single array
+    Parameters can be either constrained or unconstrained
+
+    Inputs:
+        theta  : (B,) array, Categorical probs
+        tau2   : (B,) array, beta variances
+        sigma2 : (B,) array, obs variances
+        beta   : (K,B) array, regression coefficients
+
+    Outputs:
+        xc     : (3+K,B) array, flattened parameters
+    """
+    return torch.vstack((theta[None,:],tau2[None,:],sigma2[None,:],beta))
+
+
+def sas_unflatten_torch(xc):
+    """
+    Unflatten parameters into multiple arrays
+    Parameters can be either constrained or unconstrained
+
+    Inputs:
+        xc     : (3+K,B) array, flattened parameters
+
+    Outputs:
+        theta  : (B,) array, Categorical probs
+        tau2   : (B,) array, beta variances
+        sigma2 : (B,) array, obs variances
+        beta   : (K,B) array, regression coefficients
+    """
+    theta  = xc[0,:]
+    tau2   = xc[1,:]
+    sigma2 = xc[2,:]
+    beta   = xc[3:,:]
+    return theta,tau2,sigma2,beta
+
+
+def sas_pack_torch(xd,xc):
+    """
+    Pack output of embedding flows into a single np array for pickling
+
+    Inputs:
+        xd  : (K,B) array, labels sample (K = # of covariates, B = sample size)
+        xc  : (K',B) array, continuous variables sample
+
+    Outpus:
+        out : (L,B) array, stacked samples
+
+    Note:
+    K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+    L = K + 3 + K
+    """
+
+    return torch.vstack((xd,xc))
+
+
+def sas_unpack_torch(results,K):
+    """
+    Pack output of embedding flows into a single np array for pickling
+
+    Outputs:
+        results : (L,B) array, stacked samples
+
+    Inputs:
+        xd  : (K,B) array, labels sample (N = # of observations, B = sample size)
+        ud  : (K,B) array, discrete unifs sample
+        xc  : (K',B) array, continuous variables sample
+        rho : (K',B) array, momentum variables sample
+        uc  : (B,) array, continuous unifs sample
+
+    Note:
+    K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+    L = K + 3 + K
+    """
+    xd=results[:K,:]
+    xc=results[K:,:]
+
+    return xd,xc
