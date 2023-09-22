@@ -1,0 +1,31 @@
+Training a RealNVP normalizing flow with dequantized label indices for a Spike and Slab model with the prostate cancer data set
+
+Regression settings:
+Number of covariates K: 8
+
+Flow settings:
+Flow depth: 100
+Flow width: 256
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.1
+
+Starting optimization
+iter 0: loss = 12734611193906231908929972247461888.000
+iter 1000: loss = 12574736147913665905950720.000
+iter 2000: loss = 236245606677590856590950400.000
+iter 3000: loss = 95700038824066483069386752.000
+iter 4000: loss = 14460404985223926725476352.000
+iter 5000: loss = 22363857143372562986696704.000
+iter 6000: loss = 47474821860946026109599744.000
+iter 7000: loss = 85897900191899070079434752.000
+iter 8000: loss = 2675058915304632903270400.000
+iter 9000: loss = 3410815949595822920826880.000
+iter 10000: loss = 20374710142259323830534144.000
+Done!
+Total training time: 8999.725292232004 seconds
+
+Cacheing results
+
+Saving results
