@@ -195,6 +195,11 @@ def gibbs_sas(y,x,steps,burnin_pct,seed=0):
         seed       : int, random seed
 
      Outputs:
+         pis     : (steps,K) array, predicted inclusion idx
+         betas   : (steps,K) array, predicted regression coefficients
+         thetas  : (steps,) array, predicted inclusion prbs
+         sigmas2 : (steps,) array, predicted obs variances
+         taus2   : (steps,) array, predicted beta variances
 
     Note: the total number of steps the sampler is run for is
           (T=steps+burn_in), where (burn_in=T*burnin_pct).
