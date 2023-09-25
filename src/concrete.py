@@ -728,3 +728,316 @@ def trainGMMRealNVP(temp,depth,N,K,D,tau0,sample,width=32,max_iters=1000,lr=1e-4
         if verbose and t%(max_iters//10) == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
     # end for
     return flow,losses
+
+
+
+"""
+########################################
+########################################
+Spike and slab training
+########################################
+########################################
+"""
+
+
+class sas_ref_concrete(Distribution):
+    """
+    Reference distribution for inclusion idx, prbs, variances,
+    and regression coefficients of a Spike-and-Slab model.
+
+    Inputs:
+        K    : int, number of covariates
+        temp : float, temperature of Concrete relaxation
+    """
+    def __init__(self,K,temp=1.):
+        self.relcat = ExpRelaxedCategorical(torch.tensor([temp]),torch.ones(2)/2)
+        self.K = K
+        self.dim = int(3+self.K)
+        self.big_gauss = torch.distributions.MultivariateNormal(torch.zeros(self.dim), torch.eye(self.dim))
+
+    def log_prob(self, value):
+        relcat_lp = torch.zeros(value.shape[0])
+        for k in range(self.K): relcat_lp += self.relcat.log_prob(value[...,2*k+torch.arange(0,2)])
+        xc_lp =self.big_gauss.log_prob(value[...,2*self.K:])
+        return relcat_lp+xc_lp
+
+    def sample(self,sample_shape=torch.Size()):
+        relcat_sample=self.relcat.sample(sample_shape)
+        for k in range(self.K-1): relcat_sample = torch.hstack((relcat_sample,self.relcat.sample(sample_shape)))
+
+        xc_sample = torch.randn(sample_shape[0],self.dim)
+
+        return torch.hstack((relcat_sample,xc_sample))
+#========================================
+
+
+
+def sas_concrete_sample(pred_pi,pred_beta,pred_theta,pred_sigma2,pred_tau2,temp):
+    """
+    Generate sample for learning Spike and Slab with RealNVP
+    relaxing the inclusion idxs
+
+    Inputs:
+        pred_pi     : (steps,K) array, predicted inclusion idx (from `gibbs.gibbs_gmm`)
+        pred_beta   : (steps,K) array, predicted regression coefficients (from `gibbs.gibbs_gmm`)
+        pred_theta  : (steps,) array, predicted inclusion prbs (from `gibbs.gibbs_gmm`)
+        pred_sigma2 : (steps,) array, predicted observation vars (from `gibbs.gibbs_gmm`)
+        pred_tau2   : (steps,) array, predicted beta vars (from `gibbs.gibbs_gmm`)
+        temp        : float, temperature of Concrete relaxation
+
+    Outputs:
+        dequant_sample : (steps,K') array, samples to be used in training
+
+    Note: K' = 2*K (pi) + 3 (theta, sigma2, tau2) + K (beta)
+    """
+    B,K = pred_beta.shape
+
+    # convert gibbs output to torch tensors
+    piu    = torch.from_numpy(pred_pi.T)
+    betau  = torch.from_numpy(pred_beta.T)
+    theta  = torch.from_numpy(pred_theta)
+    sigma2 = torch.from_numpy(pred_sigma2)
+    tau2   = torch.from_numpy(pred_tau2)
+
+    # estimate probabilities of each beta_k
+    p1 = np.mean(pred_pi,axis=0)
+    x_prbs = torch.from_numpy(np.vstack((1.-p1,p1)).T)
+
+    # generate sample for training using Gibbs output and Gumbel soft-max
+    G=torch.from_numpy(np.random.gumbel(size=(B,K,2)))
+    conc_sample=(x_prbs[None,...]+G)/temp-torch.log(torch.sum(torch.exp((x_prbs[None,...]+G)/temp),axis=-1))[...,None]
+    conc_sample=conc_sample.reshape(B,2*K).T
+
+    # unconstrain results
+    thetau,tau2u,sigma2u = sas_unconstrain_torch_concrete(theta,tau2,sigma2)
+
+    # deal with continuous variables
+    xc=sas_flatten_torch_concrete(thetau,tau2u,sigma2u,betau)
+
+    # merge everything
+    conc_sample=torch.vstack((conc_sample,xc)).float().T
+
+    return conc_sample
+#========================================
+
+
+
+def create_concrete_sas_RealNVP(temp,depth,K,width=32):
+    """
+    Wrapper to init a RealNVP class for a Spike and slab problem
+
+    The reference distribution is a relaxed uniform in exp space
+    for the labels and a multivariate normal with precision tau0
+    for the means
+
+    Inputs:
+        temp   : float, temperature of Concrete relaxation
+        depth  : int, number of couplings (transformations)
+        K      : int, number of covariates
+        width  : int, width of the linear layers
+
+    Outputs:
+        flow   : Module, RealNVP
+    """
+    dim=int(2*K+3+K)
+
+    # create channel-wise masks of appropriate size
+    masks=torch.zeros((2,dim))
+    masks[0,:(dim//2)]=1
+    masks[1,(dim-(dim//2)):]=1
+    masks=masks.repeat(depth//2,1)
+
+    # define reference distribution
+    ref = sas_ref_concrete(K,temp)
+
+    # define scale and translation architectures
+    net_s = lambda: nn.Sequential(
+        nn.Linear(dim, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, dim),
+        nn.Tanh()
+    )
+    net_t = lambda: nn.Sequential(
+        nn.Linear(dim, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, width),
+        nn.LeakyReLU(),
+        nn.Linear(width, dim)
+    )
+    return RealNVP(net_s, net_t, masks, ref, gmm=True)
+#========================================
+
+
+def train_concrete_sas(temp,depth,K,sample,width=32,max_iters=1000,lr=1e-4,seed=0,verbose=True):
+    """
+    Train a RealNVP normalizing flow targeting lprbs using the Adam optimizer
+
+    Input:
+        temp      : float, temperature of Concrete relaxation
+        depth     : int, number of couplings (transformations)
+        K         : int, number of covariates
+        sample    : (B,K') array, samples from target for training; B is the Monte Carlo sample size
+        width     : int, width of the linear layers
+        max_iters : int, max number of Adam iters
+        lr        : float, Adam learning rate
+        seed      : int, for reproducinility
+        verbose   : boolean, indicating whether to print loss every 100 iterations of Adam
+
+    Output:
+        flow      : distribution, trained normalizing flow
+        losses    : (maxiters,) array with loss traceplot
+
+    Note: K' = 2*K (pi) + 3 (theta, sigma2, tau2) + K (beta)
+    """
+    torch.manual_seed(seed)
+
+    # create flow
+    flow=create_concrete_sas_RealNVP(temp,depth,K,width)
+
+    # train flow
+    optimizer = torch.optim.Adam([p for p in flow.parameters() if p.requires_grad==True], lr=lr)
+    losses=np.zeros(max_iters)
+
+    for t in range(max_iters):
+        loss = -flow.log_prob(sample).mean()
+        losses[t]=loss
+
+        optimizer.zero_grad()
+        loss.backward(retain_graph=True)
+        optimizer.step()
+
+        if verbose and t%(max_iters//10) == 0: print('iter %s:' % t, 'loss = %.3f' % loss)
+    # end for
+    return flow,losses
+
+
+
+"""
+########################################
+########################################
+Spike and slab auxiliary fns
+########################################
+########################################
+"""
+
+
+def sas_unconstrain_torch_concrete(theta,tau2,sigma2):
+    """
+    Map constrained to unconstrained (real) parameters
+
+    Inputs:
+        theta  : (B,) array, Categorical probs (in (0,1))
+        tau2   : (B,) array, beta variances (>0)
+        sigma2 : (B,) array, obs variances (>0)
+
+    Outputs:
+        thetau  : (B,) array, unconstrained thetas
+        tau2u   : (B,) array, unconstrained tau2s
+        sigma2u : (B,) array, unconstrained sigma2s
+    """
+    thetau  = torch.log(theta)-torch.log1p(-theta)
+    tau2u   = torch.log(tau2)
+    sigma2u = torch.log(sigma2)
+    return thetau,tau2u,sigma2u
+
+def sas_constrain_torch_concrete(thetau,tau2u,sigma2u):
+    """
+    Map unconstrained to constrained parameters
+
+    Inputs:
+        thetau  : (B,) array, unconstrained thetas
+        tau2u   : (B,) array, unconstrained tau2s
+        sigma2u : (B,) array, unconstrained sigma2s
+
+    Outputs:
+        theta  : (B,) array, Categorical probs (in (0,1))
+        tau2   : (B,) array, beta variances (>0)
+        sigma2 : (B,) array, obs variances (>0)
+    """
+    theta  = 1./(1.+torch.exp(-thetau))
+    tau2   = torch.exp(tau2u)
+    sigma2 = torch.exp(sigma2u)
+    return theta,tau2,sigma2
+
+
+def sas_flatten_torch_concrete(theta,tau2,sigma2,beta):
+    """
+    Flatten parameters into single array
+    Parameters can be either constrained or unconstrained
+
+    Inputs:
+        theta  : (B,) array, Categorical probs
+        tau2   : (B,) array, beta variances
+        sigma2 : (B,) array, obs variances
+        beta   : (K,B) array, regression coefficients
+
+    Outputs:
+        xc     : (3+K,B) array, flattened parameters
+    """
+    return torch.vstack((theta[None,:],tau2[None,:],sigma2[None,:],beta))
+
+
+def sas_unflatten_torch_concrete(xc):
+    """
+    Unflatten parameters into multiple arrays
+    Parameters can be either constrained or unconstrained
+
+    Inputs:
+        xc     : (3+K,B) array, flattened parameters
+
+    Outputs:
+        theta  : (B,) array, Categorical probs
+        tau2   : (B,) array, beta variances
+        sigma2 : (B,) array, obs variances
+        beta   : (K,B) array, regression coefficients
+    """
+    theta  = xc[0,:]
+    tau2   = xc[1,:]
+    sigma2 = xc[2,:]
+    beta   = xc[3:,:]
+    return theta,tau2,sigma2,beta
+
+
+def sas_pack_torch_concrete(xd,xc):
+    """
+    Pack output of embedding flows into a single np array for pickling
+
+    Inputs:
+        xd  : (2*K,B) array, labels sample (K = # of covariates, B = sample size)
+        xc  : (K',B) array, continuous variables sample
+
+    Outpus:
+        out : (L,B) array, stacked samples
+
+    Note:
+    K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+    L = 2K + 3 + K
+    """
+
+    return torch.vstack((xd,xc))
+
+
+def sas_unpack_torch_concrete(results,K):
+    """
+    Pack output of embedding flows into a single np array for pickling
+
+    Outputs:
+        results : (L,B) array, stacked samples
+
+    Inputs:
+        xd  : (2*K,B) array, labels sample (N = # of observations, B = sample size)
+        ud  : (K,B) array, discrete unifs sample
+        xc  : (K',B) array, continuous variables sample
+        rho : (K',B) array, momentum variables sample
+        uc  : (B,) array, continuous unifs sample
+
+    Note:
+    K'= 3 (theta, tau2, sigma2) + K (regression coefficients)
+    L = 2K + 3 + K
+    """
+    xd=results[:(2*K),:]
+    xc=results[(2*K):,:]
+
+    return xd,xc
