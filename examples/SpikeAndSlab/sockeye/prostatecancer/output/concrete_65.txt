@@ -1,0 +1,33 @@
+Training a RealNVP normalizing flow with relaxed label indices for a Spike and Slab model with the prostate cancer data set
+
+Regression settings:
+Number of covariates K: 8
+
+Flow settings:
+Relaxation temperature: 0.5
+Flow depth: 100
+Flow width: 64
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.001
+
+Starting optimization
+iter 0: loss = 109566320371404924322363197095936.000
+iter 1000: loss = 212582584548438086516736.000
+iter 2000: loss = 339331748345965250084864.000
+iter 3000: loss = 1920239461093674582016.000
+iter 4000: loss = 1951040282632703180800.000
+iter 5000: loss = 3514899068425947054080.000
+iter 6000: loss = 6215104845559919280128.000
+iter 7000: loss = 2175343610186262642688.000
+iter 8000: loss = 2556773447351616405504.000
+iter 9000: loss = 951591320227481124864.000
+iter 10000: loss = 40511602682429964288.000
+Done!
+Total training time: 4908.403167461976 seconds
+
+Cacheing results
+
+Saving results
+Done!

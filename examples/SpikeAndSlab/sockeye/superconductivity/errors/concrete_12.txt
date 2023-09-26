@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "sas_run_concrete_spr.py", line 98, in <module>
+    tmp_flow,tmp_loss=train_concrete_sas(temp,depth,K,concrete_sample,width,max_iters,lr)
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/spr/concrete.py", line 904, in train_concrete_sas
+    loss = -flow.log_prob(sample).mean()
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/spr/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/spr/concrete.py", line 760, in log_prob
+    for k in range(self.K): relcat_lp += self.relcat.log_prob(value[...,2*k+torch.arange(0,2)])
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/spr/concrete.py", line 353, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (5001, 2)) to be within the support (IndependentConstraint(Real(), 1)) of the distribution ExpRelaxedCategorical(), but found invalid values:
+tensor([[nan, nan],
+        [nan, nan],
+        [nan, nan],
+        ...,
+        [nan, nan],
+        [nan, nan],
+        [nan, nan]], grad_fn=<IndexBackward0>)

@@ -19,7 +19,7 @@ cd $PBS_O_WORKDIR
 
 export PYTHONPATH=.
 
-cd /arc/project/st-tdjc-1/madmix/examples/sas/prst/
+cd /arc/project/st-tdjc-1/madmix/examples/sas/spr/
 
 params=`sed "${PBS_ARRAY_INDEX}q;d" sas_settings.txt`  # read the settings file in current iteration
 param_array=( $params )                            # save current row of settins in param_array

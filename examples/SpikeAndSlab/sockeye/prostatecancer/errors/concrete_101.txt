@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "sas_run_concrete_prst.py", line 113, in <module>
+    flows     = pkl_load(outpath+'sas_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/prst/aux.py", line 41, in pkl_load
+    obj = pickle.load(f)
+_pickle.UnpicklingError: invalid load key, '\x02'.
