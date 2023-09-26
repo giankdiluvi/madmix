@@ -9,24 +9,25 @@ Flow depth: 10
 Flow width: 128
 
 Optimizer settings:
-Max number of iters: 101
+Max number of iters: 10001
 Learning rate: 0.1
 
 Starting optimization
-iter 0: loss = 26307.471
-iter 10: loss = inf
-iter 20: loss = inf
-iter 30: loss = inf
-iter 40: loss = inf
-iter 50: loss = inf
-iter 60: loss = inf
-iter 70: loss = inf
-iter 80: loss = inf
-iter 90: loss = inf
-iter 100: loss = inf
+iter 0: loss = 25818.846
+iter 1000: loss = 11425576258164692244843391319277568.000
+iter 2000: loss = 11425576258164692244843391319277568.000
+iter 3000: loss = 11425576258164692244843391319277568.000
+iter 4000: loss = 11425576258164692244843391319277568.000
+iter 5000: loss = 11425576258164692244843391319277568.000
+iter 6000: loss = 11425576258164692244843391319277568.000
+iter 7000: loss = 11425576258164692244843391319277568.000
+iter 8000: loss = 11425576258164692244843391319277568.000
+iter 9000: loss = 11425576258164692244843391319277568.000
+iter 10000: loss = 11425576258164692244843391319277568.000
 Done!
-Total training time: 23.233591057010926 seconds
+Total training time: 2295.081337365089 seconds
 
 Cacheing results
 
 Saving results
+Done!

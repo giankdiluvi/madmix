@@ -1,1 +1,4 @@
-python: can't open file 'sas_run_concrete_spr.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "sas_run_concrete_spr.py", line 119, in <module>
+    losses[idx,:]  = tmp_loss
+ValueError: could not broadcast input array from shape (101,) into shape (10001,)
