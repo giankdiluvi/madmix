@@ -1,0 +1,33 @@
+Training a RealNVP normalizing flow with relaxed label indices for a Spike and Slab model with the superconductivity data set
+
+Regression settings:
+Number of covariates K: 81
+
+Flow settings:
+Relaxation temperature: 0.5
+Flow depth: 100
+Flow width: 64
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 775409447273584656384.000
+iter 1000: loss = 2716830834949619712.000
+iter 2000: loss = 1993073182797463552.000
+iter 3000: loss = 3952001031994343424.000
+iter 4000: loss = 1588599551139250176.000
+iter 5000: loss = 1594114151708360704.000
+iter 6000: loss = 1194332823360634880.000
+iter 7000: loss = 404274826212016128.000
+iter 8000: loss = 349184105339944960.000
+iter 9000: loss = 4600874245713559552.000
+iter 10000: loss = 261847629002964992.000
+Done!
+Total training time: 10342.515540005988 seconds
+
+Cacheing results
+
+Saving results
+Done!

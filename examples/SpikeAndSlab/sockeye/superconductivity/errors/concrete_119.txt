@@ -1,1 +1,6 @@
-python: can't open file 'sas_run_concrete_spr.py': [Errno 2] No such file or directory
+Traceback (most recent call last):
+  File "sas_run_concrete_spr.py", line 113, in <module>
+    flows     = pkl_load(outpath+'sas_flows')
+  File "/arc/project/st-tdjc-1/madmix/examples/sas/spr/aux.py", line 41, in pkl_load
+    obj = pickle.load(f)
+_pickle.UnpicklingError: pickle data was truncated

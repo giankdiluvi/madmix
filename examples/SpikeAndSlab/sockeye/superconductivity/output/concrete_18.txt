@@ -9,8 +9,8 @@ Flow depth: 50
 Flow width: 64
 
 Optimizer settings:
-Max number of iters: 101
+Max number of iters: 10001
 Learning rate: 0.1
 
 Starting optimization
-iter 0: loss = 33394313471721472.000
+iter 0: loss = 19700783058518016.000
