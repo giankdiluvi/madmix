@@ -22,13 +22,13 @@ package
 Specifically, `prst_dat_x.csv` and `prst_dat_y.csv`
 contain the covariates and response variable, respectively,
 for the prostate cancer data set
-and `spr_dat_x.csv` and `spr_dat_y.csv` the respective data sets
-for the superconductivity data sets.
+and `spr_dat_x.csv` and `spr_dat_y.csv` 
+the respective superconductivity data.
 These files are generated in the `SpikeAndSlab.ipynb` file,
 which imports the prostate cancer data set from a url
 and the reads the superconductivity data set from `train.csv`
 - `results/` subdirectory contains
-the cpu times from the meanfield algorithm.
+cached results from running the meanfield algorithm.
 It should also contain cached pickle files from MAD Mix,
 but due to GitHub commit size constraints it cannot be uploaded.
 You can still run the MAD Mix code in a reasonable amount of time
