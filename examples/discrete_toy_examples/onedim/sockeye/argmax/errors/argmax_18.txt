@@ -1,0 +1,31 @@
+Lmod has detected the following error: The following module(s) are unknown:
+"py-argparse/1.4.0"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore-cache load "py-argparse/1.4.0"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+
+Traceback (most recent call last):
+  File "toy_run_argmax.py", line 89, in <module>
+    tmp_flow,tmp_loss=amf.train_argmax_discrete(depth=depth,sample=training_sample,width=width,max_iters=max_iters,lr=lr)
+  File "/scratch/st-tdjc-1/madmix/toy_examples/onedim/argmax/run/argmax_flows.py", line 92, in train_argmax_discrete
+    loss = -flow.log_prob(sample).mean()
+  File "/scratch/st-tdjc-1/madmix/toy_examples/onedim/argmax/run/concrete.py", line 406, in log_prob
+    return self.prior.log_prob(z) + logp
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/multivariate_normal.py", line 214, in log_prob
+    self._validate_sample(value)
+  File "/home/giank/.local/lib/python3.8/site-packages/torch/distributions/distribution.py", line 300, in _validate_sample
+    raise ValueError(
+ValueError: Expected value argument (Tensor of shape (5000, 10)) to be within the support (IndependentConstraint(Real(), 1)) of the distribution MultivariateNormal(loc: torch.Size([10]), covariance_matrix: torch.Size([10, 10])), but found invalid values:
+tensor([[nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan],
+        ...,
+        [nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan],
+        [nan, nan, nan,  ..., nan, nan, nan]], grad_fn=<AddBackward0>)
