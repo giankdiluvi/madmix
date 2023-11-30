@@ -1,0 +1,64 @@
+Training a RealNVP normalizing flow with argmaxed label indices for a Spike and Slab model with the superconductivity data set
+
+Regression settings:
+Number of covariates K: 81
+
+Flow settings:
+Flow depth: 10
+Flow width: 32
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.1
+
+Starting optimization
+iter 0: loss = 359.363
+iter 1000: loss = 6232114310848549811650560.000
+iter 2000: loss = 5610438859438207302369280.000
+iter 3000: loss = 5393422138783051282382848.000
+iter 4000: loss = 5208302144474348290834432.000
+iter 5000: loss = 18175013519234556881395201255407616.000
+iter 6000: loss = 18175013519234556881395201255407616.000
+iter 7000: loss = 18175013519234556881395201255407616.000
+iter 8000: loss = 18175013519234556881395201255407616.000
+iter 9000: loss = 18175013519234556881395201255407616.000
+iter 10000: loss = 18175013519234556881395201255407616.000
+Done!
+Total training time: 4210.113044754136 seconds
+
+Cacheing results
+
+Saving results
+Done!
+Training a RealNVP normalizing flow with argmaxed label indices for a Spike and Slab model with the superconductivity data set
+
+Regression settings:
+Number of covariates K: 81
+
+Flow settings:
+Flow depth: 10
+Flow width: 32
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.1
+
+Starting optimization
+iter 0: loss = 360.087
+iter 1000: loss = 11088424331819656989900800.000
+iter 2000: loss = 10884490964398779469398016.000
+iter 3000: loss = 10709938648601302837231616.000
+iter 4000: loss = 10513599575131270617759744.000
+iter 5000: loss = 10292072625550092612403200.000
+iter 6000: loss = 55035860943912447246336000.000
+iter 7000: loss = 54987654989961825760575488.000
+iter 8000: loss = 54941385944138943777734656.000
+iter 9000: loss = 54896039235519747272474624.000
+iter 10000: loss = 54851075296840080240410624.000
+Done!
+Total training time: 6313.914706627838 seconds
+
+Cacheing results
+
+Saving results
+Done!

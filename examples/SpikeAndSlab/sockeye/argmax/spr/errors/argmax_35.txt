@@ -10,5 +10,5 @@ Also make sure that all modulefiles written in TCL start with the string
 
 
 
-/var/spool/slurmd/job157962/slurm_script: line 30: 146502 Killed                  python sas_run_argmax_spr.py --depth ${param_array[1]} --width ${param_array[2]} --lr ${param_array[3]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/sas/argmax/spr/'
-slurmstepd: error: Detected 1 oom_kill event in StepId=157962.batch. Some of the step tasks have been OOM Killed.
+/var/spool/slurmd/job158003/slurm_script: line 30: 144084 Killed                  python sas_run_argmax_spr.py --depth ${param_array[1]} --width ${param_array[2]} --lr ${param_array[3]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/sas/argmax/spr/'
+slurmstepd: error: Detected 1 oom_kill event in StepId=158003.batch. Some of the step tasks have been OOM Killed.
