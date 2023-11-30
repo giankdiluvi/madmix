@@ -1,0 +1,30 @@
+Training a RealNVP normalizing flow for an Ising model with argmaxed nodes
+
+M: large
+
+Flow settings:
+Flow depth: 10
+Flow width: 128
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.001
+
+Starting optimization
+iter 0: loss = 160.678
+iter 1000: loss = 51.192
+iter 2000: loss = 55.792
+iter 3000: loss = 34.782
+iter 4000: loss = 56.270
+iter 5000: loss = 73.409
+iter 6000: loss = 32.985
+iter 7000: loss = 20.474
+iter 8000: loss = 37.754
+iter 9000: loss = 18.677
+iter 10000: loss = 12.305
+Done!
+Total training time: 5719.431739393156 seconds
+
+Cacheing results
+
+Saving results
