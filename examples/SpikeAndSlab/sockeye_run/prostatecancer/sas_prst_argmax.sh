@@ -5,7 +5,7 @@
 #SBATCH --time=6:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem=1gb
+#SBATCH --mem=16gb
 #SBATCH --array=1-36
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=gian.diluvi@stat.ubc.ca

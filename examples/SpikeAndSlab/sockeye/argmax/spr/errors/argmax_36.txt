@@ -1,0 +1,14 @@
+Lmod has detected the following error: The following module(s) are unknown:
+"py-argparse/1.4.0"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore-cache load "py-argparse/1.4.0"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+
+/var/spool/slurmd/job157927/slurm_script: line 30: 88008 Killed                  python sas_run_argmax_spr.py --depth ${param_array[1]} --width ${param_array[2]} --lr ${param_array[3]} --max_iters 10001 --idx ${param_array[0]} --outpath '/scratch/st-tdjc-1/madmix/sas/argmax/spr/'
+slurmstepd: error: Detected 1 oom_kill event in StepId=157927.batch. Some of the step tasks have been OOM Killed.
