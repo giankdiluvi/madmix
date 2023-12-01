@@ -10,9 +10,3 @@ Also make sure that all modulefiles written in TCL start with the string
 
 
 
-Traceback (most recent call last):
-  File "ising_run_argmax.py", line 102, in <module>
-    flows     = pkl_load(outpath+filename+'_flows_dequant')
-  File "/scratch/st-tdjc-1/madmix/ising/argmax/smallM/run/aux.py", line 40, in pkl_load
-    with open(file+'.pkl', 'rb') as f:
-FileNotFoundError: [Errno 2] No such file or directory: '/scratch/st-tdjc-1/madmix/ising/argmax/smallM/ising_flows_dequant.pkl'
