@@ -10,3 +10,4 @@ Also make sure that all modulefiles written in TCL start with the string
 
 
 
+slurmstepd: error: *** JOB 159970 ON se108 CANCELLED AT 2023-11-30T22:54:26 DUE TO TIME LIMIT ***
