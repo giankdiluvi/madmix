@@ -1,0 +1,34 @@
+Training a RealNVP normalizing flow with argmaxed label indices for a GMM with the Palmer penguin data set
+
+Mixture settings:
+Mixture size K: 3
+Number of observations N: 333
+Prior precision tau0: 0.1
+
+Flow settings:
+Flow depth: 50
+Flow width: 32
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 0.001
+
+Starting optimization
+iter 0: loss = 3920.409
+iter 1000: loss = 202.607
+iter 2000: loss = 6.335
+iter 3000: loss = -562.905
+iter 4000: loss = -933.080
+iter 5000: loss = -878.723
+iter 6000: loss = -1190.100
+iter 7000: loss = -1161.528
+iter 8000: loss = -821.620
+iter 9000: loss = -1211.411
+iter 10000: loss = 305.322
+Done!
+Total training time: 17569.638462956063 seconds
+
+Cacheing results
+
+Saving results
+Done!
