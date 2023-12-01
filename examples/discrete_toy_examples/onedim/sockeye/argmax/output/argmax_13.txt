@@ -1,0 +1,31 @@
+Training a RealNVP normalizing flow with argmaxed discrete nodes
+
+Target distribution: onedim
+
+Flow settings:
+Flow depth: 50
+Flow width: 32
+
+Optimizer settings:
+Max number of iters: 10001
+Learning rate: 1e-05
+
+Starting optimization
+iter 0: loss = 32.235
+iter 1000: loss = 11.022
+iter 2000: loss = 9.333
+iter 3000: loss = 8.870
+iter 4000: loss = 8.608
+iter 5000: loss = 8.400
+iter 6000: loss = 8.223
+iter 7000: loss = 8.053
+iter 8000: loss = 7.878
+iter 9000: loss = 7.688
+iter 10000: loss = 7.492
+Done!
+Total training time: 2971.222587883007 seconds
+
+Cacheing results
+
+Saving results
+Done!

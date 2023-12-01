@@ -10,4 +10,3 @@ Also make sure that all modulefiles written in TCL start with the string
 
 
 
-python: can't open file '../toy_run_argmax.py': [Errno 2] No such file or directory
