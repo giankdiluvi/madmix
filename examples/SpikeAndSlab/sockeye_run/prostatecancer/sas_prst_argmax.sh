@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name="sas-argmax-prst"
+#SBATCH --job-name="sas-prst-argmax"
 #SBATCH --account=st-tdjc-1
 #SBATCH --time=6:00:00
 #SBATCH --nodes=1
