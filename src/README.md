@@ -34,6 +34,12 @@ It also contains a Gibbs sampler for a Gaussian mixture model
 - `concrete.py` contains implementations of Concrete relaxations
 and functions to train Real NVP flows for discrete-only models,
 as well as code to learn a Gaussian mixture model
+and to do sparse Bayesian regression with a Spike-and-Slab prior
 - `dequantization.py` contains an implementation of uniform dequantization
 and functions to train Real NVP flows for discrete-only models,
 as well as code to learn a Gaussian mixture model
+and to do sparse Bayesian regression with a Spike-and-Slab prior
+- `argmax_flows.py` contains an implementation of argmax flows
+and functions to train Real NVP flows for discrete-only models,
+as well as code to learn a Gaussian mixture model
+and to do sparse Bayesian regression with a Spike-and-Slab prior
