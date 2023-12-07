@@ -24,7 +24,7 @@ If you find our code useful, consider citing [our paper](https://arxiv.org/abs/2
 ```
 @article{diluvi2023madmix,
   title={Mixed variational flows for discrete variables},
-  author={{Gian Carlo} Diluvi and Trevor Campbell and Benjamin Bloem-Reddy},
+  author={{Gian Carlo} Diluvi and Benjamin Bloem-Reddy and Trevor Campbell},
   journal={arXiv:2308.15613},
   year={2023}
 }
