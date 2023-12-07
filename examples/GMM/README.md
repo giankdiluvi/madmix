@@ -3,7 +3,7 @@
 The `Gaussian_mixture_model.ipynb` Jupyter notebook contains code
 to reproduce the GMM examples.
 You should be able to run the whole notebook to get the results,
-except those of dequantization and the Concrete distribution.
+except those of argmax flows, dequantization, and the Concrete distribution.
 Check the `examples/`` README to read more about that.
 
 

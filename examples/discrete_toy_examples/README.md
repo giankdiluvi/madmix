@@ -3,7 +3,7 @@
 The `discrete_examples.ipynb` Jupyter notebook contains code
 to reproduce the three discrete toy examples.
 You should be able to run the whole notebook to get the results,
-except those of Concrete-relaxed flows and dequantization.
+except those of Concrete-relaxed flows, dequantization, and argmax flows.
 Check the examples README to read more about that.
 
 
@@ -21,3 +21,4 @@ and a bivariate mixture
 - `toy_run_concrete.py` is the script to reproduce the Concrete relaxation
 experiments
 - `toy_run_dequant.py` is the script to reproduce the dequantization experiments
+- `toy_run_argmax.py` is the script to reproduce the argmax flows experiments

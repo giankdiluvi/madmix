@@ -3,7 +3,7 @@
 The `SpikeAndSlab.ipynb` Jupyter notebook contains code
 to reproduce the Spike-and-Slab examples.
 You should be able to run the whole notebook to get the results,
-except those of dequantization and the Concrete distribution.
+except those of argmax flows, dequantization, and the Concrete distribution.
 Check the `examples/`` README to read more about that.
 
 

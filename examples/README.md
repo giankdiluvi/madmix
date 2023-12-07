@@ -72,7 +72,7 @@ Due to GitHub size constraints,
 the pickle files used in the manuscript could not be committed to this repo,
 but are available upon request 
 (if you do not want to generate them on your own).
-Each experiment requires optimizing 36 (dequantization)
+Each experiment requires optimizing 36 (dequantization and argmax flows)
 or 144 (Concrete) Real NVP normalizing flows
 with different architecture settings,
 which we recommend running in parallel fashion.
@@ -85,11 +85,12 @@ Each subdirectory with code for Concrete relaxations and dequantization
 has multiple files and subdirectories to run these methods.
 Specifically:
 - `*.pbs` are files to run the `*_run_concrete.py` script 144 times
-or the `*_run_dequant.py` script 36 times
-with the architecture settings specificied in `*_settings.txt`
-or `*_settings_dequant.txt` (respectively)
-- `*_settings.txt` contains the settings for the Concrete Real NVP architecture search
-and `*_settings_dequant.txt` those for the dequantization Real NVP
+or the `*_run_dequant.py` or `*_run_argmax.py` scripts 36 times
+with the architecture settings specificied in `*_settings.txt`,
+`*_settings_dequant.txt`, or `*_settings_argmax.txt` (respectively)
+- `*_settings.txt` contains the settings for the Concrete Real NVP architecture search,
+`*_settings_dequant.txt` those for the dequantization Real NVP,
+and `*_settings_argmax.txt` those for the argmax flows Real NVP
 - `sockeye/` contains cached results and output and error messages from running
 the Real NVP architecture search on [UBC ARC Sockeye](https://arc.ubc.ca/ubc-arc-sockeye),
 UBC's high-performance computing platform
