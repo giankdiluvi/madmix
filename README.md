@@ -26,7 +26,8 @@ If you find our code useful, consider citing [our paper](https://arxiv.org/abs/2
   title={Mixed variational flows for discrete variables},
   author={{Gian Carlo} Diluvi and Trevor Campbell and Benjamin Bloem-Reddy},
   booktitle={International Conference on Artificial Intelligence and Statistics},
-  year={2024}}   
+  year={2024}
+  }   
 ```
 
 **APA**
