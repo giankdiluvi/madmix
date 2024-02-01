@@ -22,14 +22,15 @@ If you find our code useful, consider citing [our paper](https://arxiv.org/abs/2
 **BibTeX code for citing MAD Mix**
 
 ```
-@article{diluvi2023madmix,
+@inproceedings{diluvi2024madmix,
   title={Mixed variational flows for discrete variables},
-  author={{Gian Carlo} Diluvi and Benjamin Bloem-Reddy and Trevor Campbell},
-  journal={arXiv:2308.15613},
-  year={2023}
-}
+  author={{Gian Carlo} Diluvi and Trevor Campbell and Benjamin Bloem-Reddy},
+  booktitle={International Conference on Artificial Intelligence and Statistics},
+  year={2024}}   
 ```
 
 **APA**
 
-Diluvi, G.C., Bloem-Reddy, B., and Campbell, T. (2023). Mixed variational flows for discrete variables. *arXiv:2308.15613.*
+Diluvi, G.C., Bloem-Reddy, B., and Campbell, T. 
+Mixed variational flows for discrete variables. 
+In *International Conference on Artificial Intelligence and Statistics*, 2024.
